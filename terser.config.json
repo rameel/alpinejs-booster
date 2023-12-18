@@ -1,0 +1,16 @@
+{
+    "output": {
+        "comments": false
+    },
+    "compress": {
+        "passes": 5,
+        "ecma": 2020,
+        "drop_console": true,
+        "drop_debugger": true,
+        "pure_getters": true,
+        "arguments": true,
+        "unsafe_comps": true,
+        "unsafe_math": true,
+        "unsafe_methods": true
+    }
+}
