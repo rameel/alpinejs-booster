@@ -18,9 +18,11 @@ export function template(alpine) {
             return;
         }
 
-        // Adding a delayed task to update the content is necessary
-        // because otherwise, Alpine.js doesn't include the current context
-        // for the cloned elements (or might not have enough time to react to)
+        // Adding a queued task ensures asynchronous content update, allowing Alpine.js
+        // to handle context propagation for cloned elements properly.
+        // This is important because manipulation can occur within the mutateDom function
+        // when mutation observing is disabled, preventing proper context propagation
+        // for cloned elements
         queueMicrotask(() => {
             el.innerHTML = "";
             el.appendChild(tpl.content.cloneNode(true));
