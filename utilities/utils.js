@@ -13,3 +13,10 @@ export function isTemplate(el) {
 export function isElement(el) {
     return el.nodeType === Node.ELEMENT_NODE;
 }
+
+export function listen(target, type, listener, ...args) {
+    target.addEventListener(type, listener, ...args);
+    return () => {
+        target.removeEventListener(type, listener, ...args);
+    };
+}
