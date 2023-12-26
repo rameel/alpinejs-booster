@@ -1,22 +1,26 @@
+import { loadTemplate } from "../utilities/loadTemplate";
 import { useLocation } from "../utilities/useLocation";
 import { error, isElement, isTemplate, listen, warn } from "../utilities/utils";
 
 export function router({ directive, addScopeToNode, mutateDom, initTree, reactive }) {
     const location = useLocation();
 
-    directive("link", (el, {}, { cleanup }) => {
+    directive("link", (el, { modifiers }, { cleanup }) => {
+        const method = modifiers.includes("replace")
+            ? "replaceState" : "pushState";
+
         const unsubscribe = listen(el, "click", e => {
             e.preventDefault();
             e.stopPropagation();
 
-            history.pushState({}, "", el.href);
+            history[method]({}, "", el.href);
             location.refresh();
         });
 
         cleanup(unsubscribe);
     });
 
-    directive("router", (el, { value }, { cleanup, effect }) => {
+    directive("router", (el, { value }, { cleanup, effect, evaluate }) => {
         if (!isTemplate(el)) {
             error("x-router can only be used on a 'template' tag");
             return;
@@ -35,7 +39,19 @@ export function router({ directive, addScopeToNode, mutateDom, initTree, reactiv
             params: ""
         });
 
-        addScopeToNode(el, { $route: state });
+        const router = {
+            go(path, replace = false) {
+                if (api === "hash") {
+                    path = "#" + path;
+                }
+
+                const method = replace ? "replaceState" : "pushState";
+                history[method]({}, "", path);
+                location.refresh();
+            }
+        };
+
+        addScopeToNode(el, { $router: router, $route: state });
 
         [...el.content.children].forEach(node => {
             const route = node.getAttribute("x-route")?.trim();
@@ -44,10 +60,40 @@ export function router({ directive, addScopeToNode, mutateDom, initTree, reactiv
                 return;
             }
 
+            const view = (() => {
+                if (node.hasAttribute("x-view")) {
+                    return () => loadTemplate(node.getAttribute("x-view"));
+                }
+
+                if (node.hasAttribute("x-view.prefetch")) {
+                    const promise = loadTemplate(node.getAttribute("x-view.prefetch"));
+                    return () => promise;
+                }
+
+                return () => new Promise(resolve => {
+                    const nodes = isTemplate(node)
+                        ? [...node.content.cloneNode(true).childNodes]
+                        : [node.cloneNode(true)];
+
+                    const fragment = new DocumentFragment();
+                    fragment.append(...nodes);
+                    resolve(fragment);
+                });
+            })();
+
+            let handlers = node.getAttribute("x-handler") ?? "[]";
+            if (!handlers.startsWith("[")) {
+                handlers = `[${ handlers }]`;
+            }
+
+            handlers = evaluate(handlers);
+
             table.push({
                 el: node,
                 pattern: normalize(route),
-                matcher: createMatcher(route)
+                matcher: createMatcher(route),
+                view: view,
+                handler: context => handlers.every(h => h(context) !== false)
             });
         });
 
@@ -62,15 +108,20 @@ export function router({ directive, addScopeToNode, mutateDom, initTree, reactiv
 
             clear();
 
-            route.nodes = isTemplate(route.el)
-                ? [...route.el.content.cloneNode(true).childNodes]
-                : [route.el.cloneNode(true)];
+            route.view().then(html => {
+                if (state.path !== path
+                    || state.pattern !== route.pattern
+                    || JSON.stringify(state.params) !== JSON.stringify(params)) {
+                    return;
+                }
 
-            route.nodes.forEach(node => {
-                isElement(node) && addScopeToNode(node, {}, el);
-                mutateDom(() => {
-                    el.parentElement.insertBefore(node, el);
-                    isElement(node) && initTree(node);
+                route.nodes = [...html.cloneNode(true).childNodes];
+                route.nodes.forEach(node => {
+                    isElement(node) && addScopeToNode(node, {}, el);
+                    mutateDom(() => {
+                        el.parentElement.insertBefore(node, el);
+                        isElement(node) && initTree(node);
+                    });
                 });
             });
         }
@@ -84,28 +135,36 @@ export function router({ directive, addScopeToNode, mutateDom, initTree, reactiv
 
         function match(path) {
             path = normalize(path);
+
             for (let route of table) {
                 const params = route.matcher(path);
                 if (params !== null) {
-                    return { route, params, path };
+                    const context = { router, route, params, path };
+                    if (route.handler(context) !== false) {
+                        return context;
+                    }
                 }
             }
 
             return null;
         }
 
-        effect(() => {
-            const path = api === "history"
-                ? location.pathname
-                : location.hash.slice(1);
+        const getPath = () => api === "history"
+            ? location.pathname
+            : location.hash.slice(1);
 
-            const result = match(path);
-            if (result) {
-                activate(result.route, result.path, result.params);
-            }
-            else {
-                clear();
-            }
+        effect(() => {
+            const path = getPath();
+
+            queueMicrotask(() => {
+                const result = match(path);
+                if (result && path === getPath()) {
+                    activate(result.route, result.path, result.params);
+                }
+                else {
+                    clear();
+                }
+            });
         });
 
         cleanup(clear);
@@ -129,24 +188,33 @@ function createMatcher(pattern) {
             ? segment.slice(-1)
             : "";
 
-        const name = modifier
+        let name = modifier
             ? segment.slice(1, -1)
             : segment.slice(1);
 
-        switch (modifier) {
-            case "?": {
-                const expr = `(?<${ name }>[^/]+)`;
-                return index ? `(?:/${ expr })?` : expr + "?";
-            }
+        let start = name.indexOf("(");
+        let constraint = "[^/]+";
 
+        if (start > 0) {
+            // name(\d+)
+            //      ^^^
+            constraint = name.slice(start + 1, -1);
+            name = name.slice(0, start);
+        }
+
+        switch (modifier) {
             case "*": {
                 const expr = `(?<${ name }>.*)$`;
                 return index ? `(?:/${ expr })` : expr;
             }
 
             default: {
-                const expr = `(?<${ name }>[^/]+)`;
-                return index ? `(?:/${ expr })` : expr;
+                let expr = `(?<${ name }>${ constraint })`;
+                if (index) {
+                    expr = `(?:/${ expr })`;
+                }
+
+                return modifier ? expr + "?" : expr;
             }
         }
     });
@@ -166,5 +234,6 @@ function createMatcher(pattern) {
     }
     catch (e) {
         error(`Invalid pattern: ${ pattern }`, e);
+        return () => null;
     }
 }
