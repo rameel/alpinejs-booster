@@ -1,4 +1,4 @@
-import { error } from "./utils";
+import { error } from "@/utilities/utils";
 
 const cache = new Map();
 const pendings = new Map();

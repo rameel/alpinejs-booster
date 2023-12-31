@@ -1,4 +1,4 @@
-import { error, isElement, isTemplate } from "../utilities/utils.js";
+import { error, isElement, isTemplate } from "@/utilities/utils.js";
 
 export function when({ directive, addScopeToNode, mutateDom, initTree }) {
     directive("when", (el, { expression }, { cleanup, effect, evaluate }) => {

@@ -17,6 +17,7 @@
     "alpinejs": "^3.13.3"
   },
   "devDependencies": {
+    "@rollup/plugin-alias": "^5.1.0",
     "@testing-library/dom": "^9.3.3",
     "@testing-library/jest-dom": "^6.1.6",
     "@vitest/coverage-v8": "^1.1.0",

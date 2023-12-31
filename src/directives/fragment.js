@@ -1,4 +1,4 @@
-import { error, isElement, isTemplate } from "../utilities/utils.js";
+import { error, isElement, isTemplate } from "@/utilities/utils.js";
 
 export function fragment({ directive, addScopeToNode, mutateDom, initTree }) {
     directive("fragment", (el, {}, { cleanup }) => {

@@ -1,4 +1,4 @@
-import { listen } from "./utils";
+import { listen } from "@/utilities/utils";
 
 let data;
 

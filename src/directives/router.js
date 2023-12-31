@@ -1,7 +1,7 @@
-import { createMatcher, normalizePath } from "../utilities/createMatcher";
-import { loadTemplate } from "../utilities/loadTemplate";
-import { useLocation } from "../utilities/useLocation";
-import { error, isElement, isNullish, isTemplate, listen, warn } from "../utilities/utils";
+import { createMatcher, normalizePath } from "@/utilities/createMatcher";
+import { loadTemplate } from "@/utilities/loadTemplate";
+import { useLocation } from "@/utilities/useLocation";
+import { error, isElement, isNullish, isTemplate, listen, warn } from "@/utilities/utils";
 
 export function router({ directive, addScopeToNode, mutateDom, initTree, reactive }) {
     const location = useLocation();

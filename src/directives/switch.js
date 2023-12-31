@@ -1,4 +1,4 @@
-import { error, isElement, isTemplate, warn } from "../utilities/utils.js";
+import { error, isElement, isTemplate, warn } from "@/utilities/utils.js";
 
 export function _switch({ directive, addScopeToNode, mutateDom, initTree }) {
     directive("switch", (el, { expression }, { cleanup, effect, evaluate }) => {

@@ -1,4 +1,4 @@
-import { isNullish } from "./utils";
+import { isNullish } from "@/utilities/utils";
 
 let factories = {
     "regex"(value) {
