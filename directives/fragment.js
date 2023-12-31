@@ -7,7 +7,7 @@ export function fragment({ directive, addScopeToNode, mutateDom, initTree }) {
             return;
         }
 
-        const nodes = [...el.content.cloneNode(true).childNodes];
+        let nodes = [...el.content.cloneNode(true).childNodes];
 
         nodes.forEach(node => {
             isElement(node) && addScopeToNode(node, {}, el);
@@ -20,6 +20,7 @@ export function fragment({ directive, addScopeToNode, mutateDom, initTree }) {
 
         cleanup(() => {
             nodes.forEach(node => node.remove());
+            nodes = null;
         });
     });
 }
