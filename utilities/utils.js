@@ -6,6 +6,10 @@ export function error(...args) {
     console.error("alpinejs-booster:", ...args);
 }
 
+export function isNullish(value) {
+    return value === null || value === undefined;
+}
+
 export function isTemplate(el) {
     return el.tagName === "TEMPLATE";
 }

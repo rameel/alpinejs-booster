@@ -1,12 +1,15 @@
 {
   "name": "alpinejs-booster",
   "version": "1.0.0-alpha",
-  "description": "alpinejs-booster provides additional directives, magic functions, and utilities, overcoming standard limitations for a more versatile development experience",
+  "description": "alpinejs-booster provides additional directives, magic functions, and utilities for a more productive development experience",
   "main": "index.js",
   "scripts": {
     "dev": "rollup -c --watch",
-    "build": "rimraf dist && rollup -c && terser dist/alpinejs-booster.js --config-file terser.config.json -o dist/alpinejs-booster.min.js",
-    "clean": "rimraf dist"
+    "build": "rollup -c && terser dist/alpinejs-booster.js --config-file terser.config.json -o dist/alpinejs-booster.min.js",
+    "clean": "rimraf dist coverage",
+    "test": "vitest run",
+    "test:dev": "vitest",
+    "coverage": "vitest run --coverage"
   },
   "author": "rameel",
   "license": "MIT",
@@ -14,8 +17,13 @@
     "alpinejs": "^3.13.3"
   },
   "devDependencies": {
+    "@testing-library/dom": "^9.3.3",
+    "@testing-library/jest-dom": "^6.1.6",
+    "@vitest/coverage-v8": "^1.1.0",
+    "jsdom": "^23.0.1",
     "rimraf": "^5.0.5",
-    "rollup": "^4.9.1",
-    "terser": "^5.26.0"
+    "rollup": "^4.9.2",
+    "terser": "^5.26.0",
+    "vitest": "^1.1.0"
   }
 }

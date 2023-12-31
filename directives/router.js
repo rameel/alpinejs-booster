@@ -1,6 +1,7 @@
+import { createMatcher, normalizePath } from "../utilities/createMatcher";
 import { loadTemplate } from "../utilities/loadTemplate";
 import { useLocation } from "../utilities/useLocation";
-import { error, isElement, isTemplate, listen, warn } from "../utilities/utils";
+import { error, isElement, isNullish, isTemplate, listen, warn } from "../utilities/utils";
 
 export function router({ directive, addScopeToNode, mutateDom, initTree, reactive }) {
     const location = useLocation();
@@ -40,7 +41,7 @@ export function router({ directive, addScopeToNode, mutateDom, initTree, reactiv
         });
 
         const router = {
-            go(path, replace = false) {
+            "go"(path, replace = false) {
                 if (api === "hash") {
                     path = "#" + path;
                 }
@@ -55,7 +56,7 @@ export function router({ directive, addScopeToNode, mutateDom, initTree, reactiv
 
         [...el.content.children].forEach(node => {
             const route = node.getAttribute("x-route")?.trim();
-            if (route === null) {
+            if (isNullish(route)) {
                 warn("Element has no x-route directive and will be ignored", node);
                 return;
             }
@@ -90,7 +91,7 @@ export function router({ directive, addScopeToNode, mutateDom, initTree, reactiv
 
             table.push({
                 el: node,
-                pattern: normalize(route),
+                pattern: normalizePath(route),
                 matcher: createMatcher(route),
                 view: view,
                 handler: context => handlers.every(h => h(context) !== false)
@@ -134,7 +135,7 @@ export function router({ directive, addScopeToNode, mutateDom, initTree, reactiv
         }
 
         function match(path) {
-            path = normalize(path);
+            path = normalizePath(path);
 
             for (let route of table) {
                 const params = route.matcher(path);
@@ -169,71 +170,4 @@ export function router({ directive, addScopeToNode, mutateDom, initTree, reactiv
 
         cleanup(clear);
     });
-}
-
-function normalize(path) {
-    return path
-        .split("/")
-        .filter(s => s.length)
-        .join("/");
-}
-
-function createMatcher(pattern) {
-    const segments = normalize(pattern).split("/").map((segment, index) => {
-        if (!segment.startsWith(":")) {
-            return index ? `/${ segment }` : segment;
-        }
-
-        const modifier = "?*".indexOf(segment.slice(-1)) >= 0
-            ? segment.slice(-1)
-            : "";
-
-        let name = modifier
-            ? segment.slice(1, -1)
-            : segment.slice(1);
-
-        let start = name.indexOf("(");
-        let constraint = "[^/]+";
-
-        if (start > 0) {
-            // name(\d+)
-            //      ^^^
-            constraint = name.slice(start + 1, -1);
-            name = name.slice(0, start);
-        }
-
-        switch (modifier) {
-            case "*": {
-                const expr = `(?<${ name }>.*)$`;
-                return index ? `(?:/${ expr })` : expr;
-            }
-
-            default: {
-                let expr = `(?<${ name }>${ constraint })`;
-                if (index) {
-                    expr = `(?:/${ expr })`;
-                }
-
-                return modifier ? expr + "?" : expr;
-            }
-        }
-    });
-
-    try {
-        const expression = segments.join("");
-        const regex = new RegExp(`^${ expression }$`);
-
-        return path => {
-            const result = regex.exec(path);
-            if (result) {
-                return result.groups ?? {};
-            }
-
-            return null;
-        };
-    }
-    catch (e) {
-        error(`Invalid pattern: ${ pattern }`, e);
-        return () => null;
-    }
 }
