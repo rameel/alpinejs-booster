@@ -1,5 +1,5 @@
 import { assert, describe, expect, test } from "vitest";
-import { createMatcher } from "../../utilities/createMatcher";
+import { createMatcher } from "../../src/utilities/createMatcher";
 
 describe("createMatcher", () => {
     test("pattern: ignores edge slashes", () => {
