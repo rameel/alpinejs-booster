@@ -17,7 +17,9 @@ export async function loadTemplate(path) {
     const request = (async () => {
         const result = await fetch(path);
         if (!result.ok) {
+            pendings.delete(path);
             error(`Failed to load template from ${ path }`);
+
             return new DocumentFragment();
         }
 
