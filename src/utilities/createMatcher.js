@@ -1,6 +1,6 @@
 import { isNullish } from "@/utilities/utils";
 
-let factories = {
+const factories = {
     "regex"(value) {
         const regexp = new RegExp(value);
         return {
@@ -76,231 +76,287 @@ export function normalizePath(path) {
 }
 
 export function createMatcher(pattern) {
-    const info = new Map();
-    let expression = normalizePath(pattern)
-        .split("/")
-        .filter(s => s.length)
-        .map(segment => [...tokenize(segment)])
-        .map((tokens, index, list) => {
-            if (tokens.length > 1 && tokens.every(t => t.optional)) {
-                throw new Error(`Using all segment parameters as optional is not permitted in ${ pattern }`);
-            }
-
-            const catchAllIndex = tokens.findIndex(t => t.catchAll);
-            if (index !== list.length - 1 && catchAllIndex >= 0
-                || catchAllIndex >= 0 && catchAllIndex !== tokens.length - 1) {
-                throw new Error(`'Catch-all' parameter is not permitter in the middle in ${ pattern }`);
-            }
-
-            return tokens.map((t, i) => {
-                // literal
-                if (!t.name) {
-                    return i ? t : `/${ t }`;
-                }
-
-                info.set(t.name, t);
-
-                if (tokens.every(t => t.quantifier === "?")) {
-                    return `(?:/(?<${ t.name }>[^/]+?))?`;
-                }
-
-                let expr;
-
-                if (t.catchAll) {
-                    expr = `(?<${ t.name }>.${ t.quantifier })`;
-                    i || (expr = `(?:/${ expr })`);
-                    t.quantifier === "*" && (expr += "?");
-                    return expr;
-                }
-
-                expr = `(?<${ t.name }>[^/]+?)${ t.quantifier }`;
-                return i ? expr : `/${ expr }`;
-            }).join("");
-        }).join("") || "/";
-
-    expression !== "/" && (expression += "/?");
-    const regexp = new RegExp(`^${ expression }$`);
+    const parameters = new Map();
+    const regex = build(pattern, parameters);
 
     return (path, normalize = true) => {
         normalize && (path = normalizePath(path));
-
-        let result = regexp.exec(path);
+        let result = regex.exec(path);
         if (isNullish(result)) {
             return null;
         }
 
         result = result.groups ?? {};
 
-        for (let [name, token] of info.entries()) {
+        for (let [name, parameter] of parameters.entries()) {
             let value = result[name];
 
-            if (isNullish(value)) {
-                if (isNullish(token.default)) {
-                    continue;
-                }
-
-                value = token.default;
+            if (isNullish(value) && isNullish(parameter.default)) {
+                continue;
             }
 
-            if (token.catchAll && value === "") {
-                isNullish(token.default) || (value = token.default);
-            }
+            value
+                || isNullish(parameter.default)
+                || (value = parameter.default);
 
-            const list = token.catchAll
+            const values = parameter.catchAll
                 ? value.split("/").filter(v => v.length)
                 : [value];
 
-            for (let i = 0; i < list.length; i++) {
-                for (let c of token.constraints) {
-                    if (c.test && !c.test(list[i])) {
+            for (let i = 0; i < values.length; i++) {
+                for (let c of parameter.constraints) {
+                    if (c.test && !c.test(values[i])) {
                         return null;
                     }
 
-                    c.transform && (list[i] = c.transform(list[i]));
+                    c.transform && (values[i] = c.transform(values[i]));
                 }
             }
 
-            result[name] = token.catchAll ? list : list[0];
+            result[name] = parameter.catchAll ? values : values[0];
         }
 
         return result;
     };
 }
 
-function *tokenize(segment) {
-    function throwError() {
-        throw new Error(`Invalid parameter definition in '${ segment }'`);
-    }
-
-    function parseName(value) {
-        return value.match(/^(?<name>[=a-z_$][0-9a-z_$-]*)/i)?.groups?.name ?? "";
-    }
-
-    function *constraints(pattern) {
-        function parse(i) {
-            let name = parseName(pattern.slice(i + 1));
-            let p = i + 1 + name.length;
-            let value = "";
-            let stack = 0;
-
-            for (;p < pattern.length; p++) {
-                if (pattern[p] === "(") {
-                    stack++;
-                    continue;
-                }
-
-                if (pattern[p] === ")" && --stack === 0) {
-                    value = pattern.slice(i + name.length + 2, p++);
-                    break;
-                }
-
-                if (stack <= 0) {
-                    break;
-                }
+function build(pattern, parameters) {
+    let expression = parse(pattern).map(segment => {
+        return segment.parts.map((part, index) => {
+            if (part.kind === "literal") {
+                return index ? part.value : `/${ part.value }`;
             }
 
-            if (!value && !name || stack) {
-                return throwError();
+            parameters.set(part.name, part);
+
+            if (segment.parts.length === 1 && part.quantifier === "?") {
+                return `(?:/(?<${ part.name }>[^/]+?))?`;
             }
 
-            name ||= "regex";
-            name === "=" && (name = "default");
+            if (part.catchAll) {
+                let expr = `(?<${ part.name }>.${ part.quantifier })`;
+                index || (expr = `(?:/${ expr })`);
+                part.quantifier === "*" && (expr += "?");
+                return part.quantifier === "*" ? expr + "?" : expr;
+            }
+            else {
+                const expr = `(?<${ part.name }>[^/]+?)${ part.quantifier }`;
+                return index ? expr : `/${ expr }`;
+            }
+        }).join("");
+    }).join("") || "/";
 
-            const constraint = (() => {
-                if (name === "default") {
-                    return { default: value };
+    expression !== "/" && (expression += "/?");
+    return new RegExp(`^${ expression }$`);
+}
+
+function parse(pattern) {
+    return preprocess(segments());
+
+    function preprocess(segments) {
+        const parameters = new Map();
+
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
+            const parts   = segment.parts;
+
+            for (let j = 0; j < parts.length; j++) {
+                const part = parts[j];
+                switch (part.kind) {
+                    case "literal":
+                        part.value.indexOf("?") >= 0
+                            && throwError("Literal segments cannot contain the '?' character");
+                        break;
+
+                    default:
+                        parts.length > 1
+                            && parts.every(p => p.optional)
+                            && throwError("Using all segment parameters as optional is not permitted");
+
+                        const idx = parts.findIndex(p => p.catchAll);
+                        idx < 0
+                            || i === segments.length - 1 && idx === parts.length - 1
+                            || throwError("A catch-all parameter can only appear as the last segment");
+
+                        parameters.has(part.name)
+                            && throwError(`The route parameter name '${part.name}' appears more than one time`);
+
+                        part.catchAll
+                            && isNullish(part.default)
+                            && (part.default = "");
+
+                        parameters.set(part.name, true);
+
+                        part.constraints.forEach(c => {
+                            const factory = window.routes?.constraints?.[c.name] ?? factories[c.name];
+                            if (isNullish(factory)) {
+                                throwError(`Unknown constraint '${ c.name }'`);
+                            }
+
+                            const obj = factory(c.argument);
+                            c.test = obj.test;
+                            c.transform = obj.transform;
+                        });
+                        break;
                 }
-
-                let factory = window.routes?.constraints?.[name] ?? factories[name]
-                if (factory) {
-                    return factory(value);
-                }
-
-                throw new Error(`Unknown constraint '${ name }'`);
-            })();
-
-            constraint.name = name;
-            constraint.pattern = pattern.slice(i + 1, p);
-
-            return constraint;
+            }
         }
 
-        let contraint;
+        return segments;
+    }
 
-        for (let i = 0; i < pattern.length; i += contraint.pattern.length + 1) {
-            pattern[i] !== ":" && throwError();
+    function segments() {
+        const segments = [];
 
-            contraint = parse(i);
-            yield contraint;
+        for (let i = 0; i < pattern.length;) {
+            const r = segment(i);
+            r.template && segments.push(r);
+            i += r.template.length + 1;
+        }
+
+        return segments;
+    }
+
+    function segment(p) {
+        let parts = [];
+        let index = p;
+
+        while (index < pattern.length && pattern[index] !== "/") {
+            const part = literal(index) || parameter(index);
+            parts.push(part);
+
+            index += part.template.length;
+        }
+
+        return {
+            template: pattern.slice(p, index),
+            parts: parts
         }
     }
 
-    function parseToken(pattern) {
-        // {id}
-        // {id:(\d+):int:default(10)}
-        // {id+}
-        // {id?:(\d+):int:default(10)}
+    function constraints(text, p) {
+        const array = [];
 
-        const name = parseName(pattern) || throwError();
-        const quantifier = "?*+".indexOf(pattern[name.length]) >= 0
-            ? pattern[name.length]
-            : "";
+        for (let i = p; i < text.length;) {
+            if (text[i] !== ":") {
+                throwError();
+            }
 
-        const array = [...constraints(pattern.slice(name.length + quantifier.length))];
-        const token = {
-            name,
-            pattern,
-            quantifier,
-            default: array.find(c => c.name === "default")?.default,
+            const name = constraintName(text.slice(i + 1));
+            i += name.length + 1;
+
+            const argument = text[i] === "("
+                ? extract(i, text)
+                : null;
+
+            isNullish(argument) || (i += argument.length + 2);
+
+            if (!name && !argument) {
+                throwError();
+            }
+
+            array.push({
+                name: name === ""
+                    ? "regex"
+                    : name === "="
+                        ? "default"
+                        : name,
+                argument: argument ?? ""
+            });
+
+        }
+
+        return array;
+    }
+
+    function parameter(p) {
+        if (pattern[p] !== "{") {
+            return null;
+        }
+
+        const value = extract(p);
+        const paramName = parameterName(value);
+        const template = pattern.slice(p, p + value.length + 2);
+        const quantifier = (() => {
+            const q = value[paramName.length];
+            return q === "*"
+                || q === "+"
+                || q === "?" ? q : "";
+        })();
+        const list = constraints(value, paramName.length + quantifier.length);
+
+        return {
+            kind: "parameter",
+            template: template,
+            name: paramName,
+            quantifier: quantifier,
+            constraints: list.filter(c => c.name !== "default"),
+            default: list.find(c => c.name === "default")?.argument,
             required: quantifier === "+" || quantifier === "",
             optional: quantifier === "?" || quantifier === "*",
-            catchAll: quantifier === "*" || quantifier === "+",
-            constraints: array.filter(c => c.name !== "default")
+            catchAll: quantifier === "+" || quantifier === "*"
         };
-
-        token.quantifier === "*" && (token.default ??= "");
-        return token;
     }
 
-    function parseParameter(i) {
-        let stack = 1;
+    function literal(p) {
+        for (let i = p;; i++) {
+            if (i >= pattern.length
+                || pattern[i] === "/"
+                || pattern[i] === "{") {
+                if (i === p) {
+                    return null;
+                }
 
-        for (let start = i; i < segment.length; i++) {
-            if (segment[i] === "{") {
-                stack++;
-            }
-            else if (segment[i] === "}" && --stack === 0) {
-                const value = segment.slice(start, i);
+                const template = pattern.slice(p, i);
                 return {
-                    value: value,
-                    token: parseToken(value.trim())
+                    kind: "literal",
+                    template: template,
+                    value: template
                 };
+            }
+        }
+    }
+
+    function extract(p, s) {
+        s ??= pattern;
+        const stack = [];
+
+        loop: for (let i = p; i < s.length; i++) {
+            switch (s[i]) {
+                case "{": stack.push("}"); break;
+                case "(": stack.push(")"); break;
+                case "}":
+                case ")":
+                    if (stack.pop() !== s[i]) break loop;
+                    break;
+            }
+
+            if (stack.length === 0) {
+                return s.slice(p + 1, i);
             }
         }
 
         throwError();
     }
 
-    function parseLiteral(i) {
-        let index = segment.indexOf("{", i);
-        index < 0 && (index = segment.length);
-        return segment.slice(i, index);
+    function parameterName(value) {
+        const r = value.match(/^(?<name>[a-z_$][a-z0-9_$-]*?)(?:[:?+*]|$)/i)?.groups?.name;
+        if ((r?.length ?? -1) < 0) {
+            throwError("Invalid parameter name");
+        }
+        return r;
     }
 
-    for (let i = 0; i < segment.length;) {
-        if (segment[i] === "{") {
-            const parameter = parseParameter(i + 1);
-            yield parameter.token;
-
-            i += parameter.value.length + 2;
+    function constraintName(value) {
+        const r = value.match(/^(?<name>=|[a-z0-9_$]*)(?=[/:(]|$)/i)?.groups?.name;
+        if ((r?.length ?? -1) < 0) {
+            throwError("Invalid constraint name");
         }
-        else {
-            let literal = parseLiteral(i);
-            i += literal.length;
 
-            if ((literal = literal.trim())) {
-                yield literal;
-            }
-        }
+        return r;
+    }
+
+    function throwError(message = "Invalid pattern") {
+        throw new Error(`${ message }: ${ pattern }`);
     }
 }

@@ -2,6 +2,11 @@ import { assert, describe, expect, test } from "vitest";
 import { createMatcher } from "@/utilities/createMatcher";
 
 describe("createMatcher", () => {
+    test("pattern: ignore consecutive slashes", () => {
+        const match = createMatcher("////action ////{action}///");
+        expect(match("/action /process")).toEqual({ action: "process" });
+    });
+
     test("pattern: ignores edge slashes", () => {
         let match1 = createMatcher("/home");
         let match2 = createMatcher("home/");
@@ -31,6 +36,12 @@ describe("createMatcher", () => {
             expect(match("home/")).toBeTruthy();
             expect(match("home")).toBeTruthy();
         });
+    });
+
+    test("match: empty", () => {
+        let match = createMatcher("");
+        expect(match("/")).toBeTruthy();
+        expect(match("/home")).toBeNull();
     });
 
     test("match: /", () => {
@@ -112,6 +123,18 @@ describe("createMatcher", () => {
 
         expect(match("/")).toEqual({
             path: ["10"]
+        });
+    });
+
+    test("match: /{path*:=(/controller/action/value)", () => {
+        let match = createMatcher("/{path*:=(/controller/action/value)}");
+
+        expect(match("/products/display/10")).toEqual({
+            path: ["products", "display", "10"]
+        });
+
+        expect(match("/")).toEqual({
+            path: ["controller", "action", "value"]
         });
     });
 
@@ -276,7 +299,7 @@ describe("createMatcher", () => {
 
         expect(match("/")).toEqual({ path: [100] });
         expect(match("/100")).toEqual({ path: [100] });
-        expect(match("/100/101/102")).toEqual({ path: [100,101,102] });
+        expect(match("/100/101/102")).toEqual({ path: [100, 101, 102] });
 
         expect(match("/103")).toBeNull();
         expect(match("/103/104")).toBeNull();
@@ -294,7 +317,7 @@ describe("createMatcher", () => {
 
     test("constraint: /{id?:=({})}", () => {
         let match = createMatcher("/{id?:=({default{}})}");
-        expect(match("/")).toEqual({ id: "{default{}}"});
+        expect(match("/")).toEqual({ id: "{default{}}" });
     });
 
     test("constraint(bool): /{id:bool", () => {
@@ -363,45 +386,63 @@ describe("createMatcher", () => {
     });
 
     test("Unclosed brace parameter", () => {
-        assert.throws(() => createMatcher("/{id"), "Invalid parameter definition in '{id'");
-        assert.throws(() => createMatcher("/{id}/{"), "Invalid parameter definition in '{'");
-        assert.throws(() => createMatcher("/{id:=({)}"), "Invalid parameter definition in '{id:=({)}'");
+        assert.throws(() => createMatcher("/{id"), "Invalid pattern: /{id");
+        assert.throws(() => createMatcher("/{id}/{"), "Invalid pattern: /{");
+        assert.throws(() => createMatcher("/{id:=({)}"), "Invalid pattern: /{id:=({)}");
     });
 
     test("Missing parameter name", () => {
-        assert.throws(() => createMatcher("/{}"), "Invalid parameter definition in '{}'");
-        assert.throws(() => createMatcher("/{:=(1)}"), "Invalid parameter definition in '{:=(1)}'");
+        assert.throws(() => createMatcher("/{}"), "Invalid parameter name: /{}");
+        assert.throws(() => createMatcher("/{:=(1)}"), "Invalid parameter name: /{:=(1)}");
     });
 
     test("Invalid constraint", () => {
-        assert.throws(() => createMatcher("/{id:}"), "Invalid parameter definition in '{id:}'");
-        assert.throws(() => createMatcher("/{id::}"), "Invalid parameter definition in '{id::}'");
-        assert.throws(() => createMatcher("/{id: : }"), "Invalid parameter definition in '{id: : }'");
-        assert.throws(() => createMatcher("/{id :()}"), "Invalid parameter definition in '{id :()}'");
-        assert.throws(() => createMatcher("/{id :([a-z])}"), "Invalid parameter definition in '{id :([a-z])}'");
+        assert.throws(() => createMatcher("/{id:}"), "Invalid pattern: /{id:}");
+        assert.throws(() => createMatcher("/{id::}"), "Invalid pattern: /{id::}");
+        assert.throws(() => createMatcher("/{id: int:}"), "Invalid constraint name: /{id: int:}");
+        assert.throws(() => createMatcher("/{id:int }"), "Invalid constraint name: /{id:int }");
+        assert.throws(() => createMatcher("/{id:(\\d+) }"), "Invalid pattern: /{id:(\\d+) }");
+        assert.throws(() => createMatcher("/{id: : }"), "Invalid constraint name: /{id: : }");
+        assert.throws(() => createMatcher("/{id :()}"), "Invalid parameter name: /{id :()}");
+        assert.throws(() => createMatcher("/{id :([a-z])}"), "Invalid parameter name: /{id :([a-z])}");
     });
 
     test("Using all segment parameters as optional is not permitted", () => {
-        assert.throws(() => createMatcher("/{a?}{b?}"), "Using all segment parameters as optional is not permitted in /{a?}{b?}");
-        assert.throws(() => createMatcher("/{a?}{b?}{c?}"), "Using all segment parameters as optional is not permitted in /{a?}{b?}{c?}");
-        assert.throws(() => createMatcher("/{a*}{b*}"), "Using all segment parameters as optional is not permitted in /{a*}{b*}");
-        assert.throws(() => createMatcher("/{a?}{b*}"), "Using all segment parameters as optional is not permitted in /{a?}{b*}");
+        assert.throws(() => createMatcher("/{a?}{b?}"), "Using all segment parameters as optional is not permitted: /{a?}{b?}");
+        assert.throws(() => createMatcher("/{a?}{b?}{c?}"), "Using all segment parameters as optional is not permitted: /{a?}{b?}{c?}");
+        assert.throws(() => createMatcher("/{a*}{b*}"), "Using all segment parameters as optional is not permitted: /{a*}{b*}");
+        assert.throws(() => createMatcher("/{a?}{b*}"), "Using all segment parameters as optional is not permitted: /{a?}{b*}");
     });
 
-    test("Catch-all parameter in the middle is not permitter", () => {
-        assert.throws(() => createMatcher("/{a*}/{b}"), "'Catch-all' parameter is not permitter in the middle in /{a*}/{b}");
-        assert.throws(() => createMatcher("/{a}/{b*}/c"), "'Catch-all' parameter is not permitter in the middle in /{a}/{b*}/c");
-        assert.throws(() => createMatcher("/{a+}{b+}"), "'Catch-all' parameter is not permitter in the middle in /{a+}{b+}");
-        assert.throws(() => createMatcher("/{a}/{b*}/{c}"), "'Catch-all' parameter is not permitter in the middle in /{a}/{b*}/{c}");
-        assert.throws(() => createMatcher("/{a*}-b"), "'Catch-all' parameter is not permitter in the middle in /{a*}-b");
-        assert.throws(() => createMatcher("/a-{b*}-c"), "'Catch-all' parameter is not permitter in the middle in /a-{b*}-c");
-        assert.throws(() => createMatcher("/{a?}{b*}{c+}"), "'Catch-all' parameter is not permitter in the middle in /{a?}{b*}{c+}");
-        assert.throws(() => createMatcher("/{b*}{c+}"), "'Catch-all' parameter is not permitter in the middle in /{b*}{c+}");
-        assert.throws(() => createMatcher("/{a?}{b+}{c+}"), "'Catch-all' parameter is not permitter in the middle in /{a?}{b+}{c+}");
-        assert.throws(() => createMatcher("/{a+}{b+}{c+}"), "'Catch-all' parameter is not permitter in the middle in /{a+}{b+}{c+}");
+    test("A catch-all parameter can only appear as the last segment", () => {
+        assert.throws(() => createMatcher("/{a*}/{b}"), "A catch-all parameter can only appear as the last segment: /{a*}/{b}");
+        assert.throws(() => createMatcher("/{a}/{b*}/c"), "A catch-all parameter can only appear as the last segment: /{a}/{b*}/c");
+        assert.throws(() => createMatcher("/{a+}{b+}"), "A catch-all parameter can only appear as the last segment: /{a+}{b+}");
+        assert.throws(() => createMatcher("/{a}/{b*}/{c}"), "A catch-all parameter can only appear as the last segment: /{a}/{b*}/{c}");
+        assert.throws(() => createMatcher("/{a*}-b"), "A catch-all parameter can only appear as the last segment: /{a*}-b");
+        assert.throws(() => createMatcher("/a-{b*}-c"), "A catch-all parameter can only appear as the last segment: /a-{b*}-c");
+        assert.throws(() => createMatcher("/{a?}{b*}{c+}"), "A catch-all parameter can only appear as the last segment: /{a?}{b*}{c+}");
+        assert.throws(() => createMatcher("/{b*}{c+}"), "A catch-all parameter can only appear as the last segment: /{b*}{c+}");
+        assert.throws(() => createMatcher("/{a?}{b+}{c+}"), "A catch-all parameter can only appear as the last segment: /{a?}{b+}{c+}");
+        assert.throws(() => createMatcher("/{a+}{b+}{c+}"), "A catch-all parameter can only appear as the last segment: /{a+}{b+}{c+}");
     });
 
     test("Unknown constraint", () => {
         assert.throws(() => createMatcher("/{a:uuid}"), "Unknown constraint 'uuid'");
+    });
+
+    test("Literal segments cannot contain the '?' character", () => {
+        assert.throws(() => createMatcher("/action?"), "Literal segments cannot contain the '?' character: /action?");
+        assert.throws(() => createMatcher("/?action"), "Literal segments cannot contain the '?' character: /?action");
+        assert.throws(() => createMatcher("/name?action"), "Literal segments cannot contain the '?' character: /name?action");
+        assert.throws(() => createMatcher("/action/{name}?)"), "Literal segments cannot contain the '?' character: /action/{name}?");
+        assert.throws(() => createMatcher("/action/?{name})"), "Literal segments cannot contain the '?' character: /action/?{name}");
+    });
+
+    test("The repeated route parameter name", () => {
+        assert.throws(() => createMatcher("/{a}/{a}"), "The route parameter name 'a' appears more than one time");
+        assert.throws(() => createMatcher("/{a}{a}"), "The route parameter name 'a' appears more than one time");
+        assert.throws(() => createMatcher("/{a}-{a}"), "The route parameter name 'a' appears more than one time");
+        assert.throws(() => createMatcher("/{a}/b/{a}"), "The route parameter name 'a' appears more than one time");
     });
 });
