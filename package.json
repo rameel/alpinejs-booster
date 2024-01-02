@@ -20,12 +20,12 @@
     "@rollup/plugin-alias": "^5.1.0",
     "@testing-library/dom": "^9.3.3",
     "@testing-library/jest-dom": "^6.1.6",
-    "@vitest/coverage-v8": "^1.1.0",
+    "@vitest/coverage-v8": "^1.1.1",
     "@vitest/ui": "^1.1.1",
     "jsdom": "^23.0.1",
     "rimraf": "^5.0.5",
     "rollup": "^4.9.2",
     "terser": "^5.26.0",
-    "vitest": "^1.1.0"
+    "vitest": "^1.1.1"
   }
 }
