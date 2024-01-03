@@ -31,6 +31,20 @@ const terserOptions = {
     }
 };
 
+const plugins = [
+    resolve(),
+    production && size(),
+    production && replace({
+        "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+        preventAssignment: true
+    }),
+    alias({
+        entries: [
+            { find: "@", replacement: __SRC }
+        ]
+    })
+];
+
 export default [{
     input: "src/index.js",
     treeshake: "smallest",
@@ -43,33 +57,12 @@ export default [{
         format: "iife",
         plugins: [terser(terserOptions)]
     }],
-    plugins: [
-        resolve(),
-        production && size(),
-        production && replace({
-            "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
-            preventAssignment: true
-        }),
-        alias({
-            entries: [
-                { find: "@", replacement: __SRC }
-            ]
-        })
-    ]},
-    production && {
-        input: "src/plugins/index.js",
-        output: {
-            file: "dist/alpinejs-booster.esm.js",
-            format: "esm"
-        },
-        plugins: [
-            resolve(),
-            alias({
-                entries: [
-                    { find: "@", replacement: __SRC }
-                ]
-            }),
-            size()
-        ]
-    }
-].filter(Boolean);
+    plugins
+}, production && {
+    input: "src/plugins/index.js",
+    output: {
+        file: "dist/alpinejs-booster.esm.js",
+        format: "esm"
+    },
+    plugins
+}].filter(Boolean);
