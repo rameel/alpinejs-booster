@@ -1,4 +1,4 @@
-export function format({ directive, mutateDom }) {
+export default function({ directive, mutateDom }) {
     directive("format", (el, { modifiers }, { effect, evaluate }) => {
         const placeholderRegex = /{{(?<expr>.+?)}}/g;
         const isOnce = modifiers.includes("once");

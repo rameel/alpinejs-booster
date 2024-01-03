@@ -1,6 +1,6 @@
 import { error, isElement, isTemplate } from "@/utilities/utils.js";
 
-export function fragment({ directive, addScopeToNode, mutateDom, initTree }) {
+export default function({ directive, addScopeToNode, mutateDom, initTree }) {
     directive("fragment", (el, {}, { cleanup }) => {
         if (!isTemplate(el)) {
             error("x-fragment can only be used on a 'template' tag");
