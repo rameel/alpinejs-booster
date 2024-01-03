@@ -1,17 +1,17 @@
-import { _switch } from "@/directives/switch.js";
-import { destroy } from "@/directives/destroy.js";
-import { format } from "@/directives/format";
-import { fragment } from "@/directives/fragment.js";
-import { router } from "@/directives/router";
-import { template } from "@/directives/template.js";
-import { when } from "@/directives/when.js";
+import { destroy } from "@/plugins";
+import { format } from "@/plugins";
+import { fragment } from "@/plugins";
+import { match } from "@/plugins";
+import { router } from "@/plugins";
+import { template } from "@/plugins";
+import { when } from "@/plugins";
 
 document.addEventListener("alpine:init", () => {
     Alpine.plugin([
-        _switch,
         destroy,
         format,
         fragment,
+        match,
         router,
         template,
         when

@@ -1,6 +1,6 @@
 import { error, isTemplate } from "@/utilities/utils.js";
 
-export function template(alpine) {
+export default function(alpine) {
     alpine.directive("template", (el, { expression }) => {
         if (isTemplate(el)) {
             error("x-template cannot be used on a 'template' tag");
