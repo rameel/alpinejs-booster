@@ -1,10 +1,10 @@
-import { registerShortcutListener } from "@/utilities/registerShortcutListener";
+import { registerHotkey } from "@/utilities/registerHotkey";
 import { single } from "@/utilities/utils";
 
 const optionKeys = ["stop", "passive", "prevent", "window", "document"];
 
 export default function({ directive }) {
-    directive("shortcut", (el, { expression, value, modifiers }, { evaluateLater, cleanup }) => {
+    directive("hotkey", (el, { expression, value, modifiers }, { evaluateLater, cleanup }) => {
         const evaluate = expression ? evaluateLater(expression) : () => {};
         const listener = e => evaluate(() => { }, {
             scope: {
@@ -26,7 +26,7 @@ export default function({ directive }) {
             .filter(m => !optionKeys.includes(m))
             .flatMap(s => s.split(","))
             .map(shortcut =>
-                registerShortcutListener(
+                registerHotkey(
                     target,
                     shortcut,
                     listener,
