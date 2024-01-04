@@ -1,3 +1,4 @@
+import { createResizeObservable } from "@/utilities/createResizeObservable";
 import { error } from "@/utilities/utils";
 
 const names = new Map(
@@ -16,8 +17,14 @@ const names = new Map(
         "naturalHeight",
         "naturalWidth",
 
-        "group",
-        "open"
+        "clientHeight",
+        "clientWidth",
+        "offsetHeight",
+        "offsetWidth",
+
+        "open",
+
+        "group"
     ].map(v => [v.toLowerCase(), v])
 );
 
@@ -73,6 +80,13 @@ export default function({ directive, mutateDom }) {
                 processMediaSizing("IMG", "load");
                 break;
 
+            case "clientHeight":
+            case "clientWidth":
+            case "offsetHeight":
+            case "offsetWidth":
+                processResizable();
+                break;
+
             case "open":
                 processDetails();
                 break;
@@ -122,6 +136,10 @@ export default function({ directive, mutateDom }) {
                 updateVariable();
                 cleanup(listen(el, eventName, updateVariable));
             }
+        }
+
+        function processResizable() {
+            cleanup(createResizeObservable(el, updateVariable));
         }
 
         function processDetails() {
