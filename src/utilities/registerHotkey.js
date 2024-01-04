@@ -10,8 +10,6 @@ const aliases = {
     "left": "arrowleft",
     "pgup": "pageup",
     "pgdn": "pagedown",
-    "pu": "pageup",
-    "pd": "pagedown",
     "break": "pause",
     "scroll": "scrolllock",
     "scrlk": "scrolllock",
