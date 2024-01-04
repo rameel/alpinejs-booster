@@ -16,6 +16,7 @@ const names = new Map(
         "naturalHeight",
         "naturalWidth",
 
+        "group",
         "open"
     ].map(v => [v.toLowerCase(), v])
 );
