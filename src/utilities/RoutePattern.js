@@ -1,6 +1,6 @@
 import { isNullish } from "@/utilities/utils";
 
-const factories = {
+const defaultConstraints = {
     "regex"(value) {
         const regexp = new RegExp(value);
         return {
@@ -63,32 +63,46 @@ const factories = {
     },
 };
 
-export function normalizePath(path) {
-    if (path === "" || path === "/") {
-        return "/";
+export class RoutePattern {
+    #regex;
+    #template;
+    #segments;
+    #parameters;
+    #constraints;
+
+    get template() {
+        return this.#template;
     }
 
-    return "/" + path
-        .trim()
-        .split("/")
-        .filter(s => s.length)
-        .join("/");
-}
+    get regex() {
+        return this.#regex;
+    }
 
-export function createMatcher(pattern) {
-    const parameters = new Map();
-    const regex = build(pattern, parameters);
+    get constraints() {
+        return this.#constraints;
+    }
 
-    return (path, normalize = true) => {
+    constructor(template, constraints = null) {
+        this.#template = template;
+        this.#regex = build(
+            template,
+            this.#segments = [],
+            this.#parameters = new Map(),
+            this.#constraints = constraints ?? {}
+        );
+    }
+
+    match(path, normalize = true) {
         normalize && (path = normalizePath(path));
-        let result = regex.exec(path);
+        let result = this.#regex.exec(path);
+
         if (isNullish(result)) {
             return null;
         }
 
         result = result.groups ?? {};
 
-        for (let [name, parameter] of parameters.entries()) {
+        for (let [name, parameter] of this.#parameters.entries()) {
             let value = result[name];
 
             if (isNullish(value) && isNullish(parameter.default)) {
@@ -104,12 +118,14 @@ export function createMatcher(pattern) {
                 : [value];
 
             for (let i = 0; i < values.length; i++) {
-                for (let c of parameter.constraints) {
-                    if (c.test && !c.test(values[i])) {
+                for (let constraint of parameter.constraints) {
+                    if (constraint.test && !constraint.test(values[i])) {
                         return null;
                     }
 
-                    c.transform && (values[i] = c.transform(values[i]));
+                    if (constraint.transform) {
+                        values[i] = constraint.transform(values[i]);
+                    }
                 }
             }
 
@@ -117,11 +133,72 @@ export function createMatcher(pattern) {
         }
 
         return result;
-    };
+    }
+
+    build(values) {
+        values = new Map(Object.entries(values));
+        const segments = [];
+
+        for (let segment of this.#segments) {
+            const parts = [];
+
+            for (let part of segment.parts) {
+                if (part.kind === "literal") {
+                    parts.push(part.value);
+                }
+                else {
+                    let value = values.get(part.name);
+                    values.delete(part.name);
+
+                    if (isNullish(value) || value === "") {
+                        value = this.#parameters.get(part.name)?.default;
+                        if (part.catchAll && value) {
+                            value = value.split("/");
+                        }
+                    }
+
+                    if (isNullish(value) || value === "") {
+                        if (part.required) {
+                            return null;
+                        }
+
+                        // TODO @rameel: check twice
+                        if (part.optional && part.default === value) {
+                            continue;
+                        }
+                    }
+
+                    if (part.catchAll) {
+                        Array.isArray(value) || (value = [value]);
+                        parts.push(...value.map(v => encodeURIComponent(v)).join("/"));
+                    }
+                    else {
+                        parts.push(encodeURIComponent(value));
+                    }
+                }
+            }
+
+            parts.length && segments.push(parts.join(""));
+        }
+
+        let queries = [...values.entries()].map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v)).join("&");
+        queries && (queries = "?" + queries);
+
+        const result = segments.join("/") + queries;
+        return result[0] !== "/"
+            ? "/" + result
+            : result;
+    }
+
+    static normalize(path) {
+        return normalizePath(path);
+    }
 }
 
-function build(pattern, parameters) {
-    let expression = parse(pattern).map(segment => {
+function build(pattern, segments, parameters, constraints) {
+    segments.push(...parse(pattern, constraints));
+
+    let expression = segments.map(segment => {
         return segment.parts.map((part, index) => {
             if (part.kind === "literal") {
                 return index ? part.value : `/${ part.value }`;
@@ -150,57 +227,50 @@ function build(pattern, parameters) {
     return new RegExp(`^${ expression }$`);
 }
 
-function parse(pattern) {
+function parse(pattern, factories) {
     return preprocess(segments());
 
     function preprocess(segments) {
-        const parameters = new Map();
+        segments.find(s => s.parts.length > 1 && s.parts.every(p => p.optional))
+            && throwError("Using all segment parameters as optional is not permitted");
 
-        for (let i = 0; i < segments.length; i++) {
-            const segment = segments[i];
-            const parts   = segment.parts;
+        const parameters = new Map;
 
-            for (let j = 0; j < parts.length; j++) {
-                const part = parts[j];
-                switch (part.kind) {
-                    case "literal":
-                        part.value.indexOf("?") >= 0
-                            && throwError("Literal segments cannot contain the '?' character");
-                        break;
-
-                    default:
-                        parts.length > 1
-                            && parts.every(p => p.optional)
-                            && throwError("Using all segment parameters as optional is not permitted");
-
-                        const idx = parts.findIndex(p => p.catchAll);
-                        idx < 0
-                            || i === segments.length - 1 && idx === parts.length - 1
-                            || throwError("A catch-all parameter can only appear as the last segment");
-
-                        parameters.has(part.name)
-                            && throwError(`The route parameter name '${part.name}' appears more than one time`);
-
-                        part.catchAll
-                            && isNullish(part.default)
-                            && (part.default = "");
-
-                        parameters.set(part.name, true);
-
-                        part.constraints.forEach(c => {
-                            const factory = window.routes?.constraints?.[c.name] ?? factories[c.name];
-                            if (isNullish(factory)) {
-                                throwError(`Unknown constraint '${ c.name }'`);
-                            }
-
-                            const obj = factory(c.argument);
-                            c.test = obj.test;
-                            c.transform = obj.transform;
-                        });
-                        break;
-                }
+        segments.flatMap(s => s.parts).forEach((part, index, parts) => {
+            if (part.kind === "literal" && part.value.indexOf("?") >= 0) {
+                throwError("Literal segments cannot contain the '?' character");
             }
-        }
+
+            if (part.kind === "parameter") {
+                if (part.catchAll && index !== parts.length - 1) {
+                    throwError("A catch-all parameter can only appear as the last segment");
+                }
+
+                if (parameters.has(part.name)) {
+                    throwError(`The route parameter name '${part.name}' appears more than one time`);
+                }
+
+                part.quantifier === "*"
+                    && isNullish(part.default)
+                    && (part.default = "");
+
+                part.default === ""
+                    && part.quantifier !== "*"
+                    && (part.default = null);
+
+                parameters.set(part.name, true);
+
+                part.constraints.forEach(constraint => {
+                    const factory = factories?.[name] ?? defaultConstraints[constraint.name];
+
+                    if (isNullish(factory)) {
+                        throwError(`Unknown constraint '${ constraint.name }'`);
+                    }
+
+                    Object.assign(constraint, factory(constraint.argument));
+                });
+            }
+        });
 
         return segments;
     }
@@ -359,4 +429,16 @@ function parse(pattern) {
     function throwError(message = "Invalid pattern") {
         throw new Error(`${ message }: ${ pattern }`);
     }
+}
+
+function normalizePath(path) {
+    if (path === "" || path === "/") {
+        return "/";
+    }
+
+    return "/" + path
+        .trim()
+        .split("/")
+        .filter(s => s.length)
+        .join("/");
 }

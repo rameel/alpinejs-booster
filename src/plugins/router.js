@@ -1,5 +1,5 @@
-import { createMatcher, normalizePath } from "@/utilities/createMatcher";
 import { loadTemplate } from "@/utilities/loadTemplate";
+import { RoutePattern } from "@/utilities/RoutePattern";
 import { useLocation } from "@/utilities/useLocation";
 import { error, isElement, isNullish, isTemplate, listen, warn } from "@/utilities/utils";
 
@@ -56,6 +56,7 @@ export default function({ directive, addScopeToNode, mutateDom, initTree, reacti
 
         [...el.content.children].forEach(node => {
             const route = node.getAttribute("x-route")?.trim();
+
             if (isNullish(route)) {
                 warn("Element has no x-route directive and will be ignored", node);
                 return;
@@ -89,13 +90,13 @@ export default function({ directive, addScopeToNode, mutateDom, initTree, reacti
 
             handlers = evaluate(handlers);
 
-            table.push({
-                el: node,
-                pattern: normalizePath(route),
-                matcher: createMatcher(route),
-                view: view,
-                handler: context => handlers.every(h => h(context) !== false)
-            });
+            table.push(Object.assign(
+                new RoutePattern(route),
+                {
+                    el: node,
+                    view: view,
+                    handler: context => handlers.every(h => h(context) !== false)
+                }));
         });
 
         function activate(route, path, params) {
@@ -104,14 +105,14 @@ export default function({ directive, addScopeToNode, mutateDom, initTree, reacti
             }
 
             state.path = path;
-            state.pattern = route.pattern;
+            state.pattern = route.template;
             state.params = params;
 
             clear();
 
             route.view().then(html => {
                 if (state.path !== path
-                    || state.pattern !== route.pattern
+                    || state.pattern !== route.template
                     || JSON.stringify(state.params) !== JSON.stringify(params)) {
                     return;
                 }
@@ -135,10 +136,10 @@ export default function({ directive, addScopeToNode, mutateDom, initTree, reacti
         }
 
         function match(path) {
-            path = normalizePath(path);
+            path = RoutePattern.normalize(path);
 
             for (let route of table) {
-                const params = route.matcher(path);
+                const params = route.match(path);
                 if (params !== null) {
                     const context = { router, route, params, path };
                     if (route.handler(context) !== false) {
