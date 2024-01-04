@@ -64,12 +64,12 @@ export default function({ directive, mutateDom }) {
 
             case "videoHeight":
             case "videoWidth":
-                processVideoSizing();
+                processMediaSizing("VIDEO", "resize");
                 break;
 
             case "naturalHeight":
             case "naturalWidth":
-                processImageSizing();
+                processMediaSizing("IMG", "load");
                 break;
 
             case "open":
@@ -112,17 +112,10 @@ export default function({ directive, mutateDom }) {
             }
         }
 
-        function processVideoSizing() {
-            if (tagName === "VIDEO") {
+        function processMediaSizing(name, eventName) {
+            if (tagName === name) {
                 updateVariable();
-                cleanup(listen(el, "resize", updateVariable));
-            }
-        }
-
-        function processImageSizing() {
-            if (tagName === "IMG") {
-                updateVariable();
-                cleanup(listen(el, "load", updateVariable));
+                cleanup(listen(el, eventName, updateVariable));
             }
         }
 
