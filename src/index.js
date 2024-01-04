@@ -1,3 +1,4 @@
+import { bound } from "@/plugins";
 import { destroy } from "@/plugins";
 import { format } from "@/plugins";
 import { fragment } from "@/plugins";
@@ -9,6 +10,7 @@ import { when } from "@/plugins";
 
 document.addEventListener("alpine:init", () => {
     Alpine.plugin([
+        bound,
         destroy,
         format,
         fragment,
