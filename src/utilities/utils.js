@@ -24,3 +24,9 @@ export function listen(target, type, listener, ...args) {
         target.removeEventListener(type, listener, ...args);
     };
 }
+
+export const single = (...fns) => (...args) => {
+    for (const fn of fns) {
+        fn && fn(...args);
+    }
+};

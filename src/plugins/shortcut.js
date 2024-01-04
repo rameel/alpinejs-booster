@@ -1,4 +1,5 @@
 import { createShortcut } from "@/utilities/createShortcut";
+import { single } from "@/utilities/utils";
 
 const optionKeys = ["stop", "passive", "prevent", "window", "document"];
 
@@ -21,12 +22,17 @@ export default function({ directive }) {
         const target = modifiers.includes("window")   ? window   :
                        modifiers.includes("document") ? document : el;
 
-        el.dataset.shortcut && modifiers.push(el.dataset.shortcut);
-        modifiers = modifiers.filter(m => !optionKeys.includes(m));
+        const disposes = modifiers
+            .filter(m => !optionKeys.includes(m))
+            .flatMap(s => s.split(","))
+            .map(shortcut =>
+                createShortcut(
+                    target,
+                    shortcut,
+                    listener,
+                    value || "keydown",
+                    options));
 
-        const shortcuts = modifiers.flatMap(s => s.split(","));
-        const stop = createShortcut(target, shortcuts, listener, value || "keydown", options);
-
-        cleanup(stop);
+        cleanup(single(...disposes));
     });
 }

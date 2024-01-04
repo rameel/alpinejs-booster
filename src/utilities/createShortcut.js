@@ -34,69 +34,62 @@ const aliases = {
     "slash": "/"
 };
 
-const defaultOptions = {
-    passive: false,
-    prevent: false,
-    stop: false
-};
-
 const controlKeys = ["ctrlKey", "altKey", "shiftKey", "metaKey"];
 
-export function createShortcut(target, key, handler, eventName = "keydown", options = { }) {
-    options = Object.assign({ }, defaultOptions, options);
-    const shortcuts = [...(new Set(
-        (Array.isArray(key) ? key : [key])
-            .map(s => s.replace(/\s+/g, "").toLowerCase())
-            .map(s => s.split("+").sort().join("+"))
-            .filter(s => s.length)))
-    ].map(describeKey);
+export function createShortcut(target, shortcut, handler, eventName = "keydown", options = {}) {
+    options = {
+        ...options
+    };
+
+    shortcut = describe(shortcut
+        .replace(/\s+/g, "")
+        .toLowerCase()
+        .split("+")
+        .sort()
+        .join("+"));
 
     return listen(target, eventName, function(e) {
         const code = e.code.toUpperCase();
-        for (const key of shortcuts) {
-            if (key.code === code && controlKeys.every(n => key[n] === e[n])) {
-                options.stop && e.stopPropagation();
-                options.prevent && e.preventDefault();
-                handler.call(this, e);
-            }
+
+        if (shortcut.code === code && controlKeys.every(n => shortcut[n] === e[n])) {
+            options.prevent && e.preventDefault();
+            options.stop && e.stopPropagation();
+            handler.call(this, e);
         }
     }, { passive: !!options.passive && !options.prevent });
-
-    function describeKey(key) {
-        const info = key.split("+").reduce((data, k) => {
-            k = aliases[k] ?? k;
-            switch (k) {
-                case "ctrl":
-                case "alt":
-                case "shift":
-                case "meta":
-                    data[`${ k }Key`] = true;
-                    break;
-
-                default:
-                    k.length || throwError(key);
-
-                    k = k.toUpperCase();
-                    data.code = k.length === 1 && k >= 'A' && k <= 'Z' ? `KEY${ k }` : k;
-                    break;
-            }
-            return data;
-        }, {
-            code: null,
-            ctrlKey: false,
-            altKey: false,
-            shiftKey: false,
-            metaKey: false
-        });
-
-        if (info.code === null) {
-            throwError(key);
-        }
-
-        return info;
-    }
 }
 
-function throwError(key) {
-    throw new Error(`Invalid shortcut definition: ${ key }`);
+function describe(shortcut) {
+    const info = shortcut.split("+").reduce((data, k) => {
+        k = aliases[k] ?? k;
+        switch (k) {
+            case "ctrl":
+            case "alt":
+            case "shift":
+            case "meta":
+                data[`${ k }Key`] = true;
+                break;
+
+            default:
+                k.length || invalidKey(shortcut);
+                k = k.toUpperCase();
+
+                data.code = k.length === 1 && k >= 'A' && k <= 'Z' ? `KEY${ k }` : k;
+                break;
+        }
+        return data;
+    }, {
+        code: null,
+        ctrlKey: false,
+        altKey: false,
+        shiftKey: false,
+        metaKey: false
+    });
+
+    info.code === null && invalidKey(shortcut);
+    return info;
+}
+
+function invalidKey(shortcut) {
+    throw new Error(`Invalid shortcut: '${ shortcut }'`);
 }
