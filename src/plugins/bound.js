@@ -75,6 +75,10 @@ export default function({ directive, mutateDom }) {
             case "open":
                 processDetails();
                 break;
+
+            case "group":
+                processGroup();
+                break;
         }
 
         function processValue() {
@@ -125,11 +129,23 @@ export default function({ directive, mutateDom }) {
                 cleanup(listen(el, "toggle", updateVariable));
             }
         }
+
+        function processGroup() {
+            if (isCheckable(el)) {
+                el.name || mutateDom(() => el.name = expression);
+
+                effect(() =>
+                    mutateDom(() =>
+                        applyGroupValues(el, getValue() ?? [])));
+
+                cleanup(listen(el, "input", () => setValue(collectGroupValues(el, getValue()))));
+            }
+        }
     });
 }
 
 function isCheckable(el) {
-    return el.nodeName === "INPUT" && (el.type === "checkbox" || el.type === "radio");
+    return el.tagName === "INPUT" && (el.type === "checkbox" || el.type === "radio");
 }
 
 function applySelectValues(el, values) {
@@ -140,12 +156,40 @@ function applySelectValues(el, values) {
 
 function collectSelectedValues(el) {
     if (el.multiple) {
-        const values = [];
-        for (const option of el.selectedOptions) {
-            values.push(option.value || option.text);
-        }
-        return values;
+        return [...el.selectedOptions.map(o => o.value || o.text)];
     }
 
     return el.value;
+}
+
+function applyGroupValues(el, values) {
+    switch (el.type) {
+        case "checkbox":
+            el.checked = values.indexOf(el.value) >= 0;
+            break;
+
+        case "radio":
+            el.checked = Array.isArray(values)
+                ? values.indexOf(el.value) >= 0
+                : el.value === values;
+            break;
+    }
+}
+
+function collectGroupValues(el, values) {
+    if (el.type === "radio") {
+        return el.value;
+    }
+
+    Array.isArray(values) || (values = [values]);
+    const index = values.indexOf(el.value);
+
+    if (el.checked) {
+        index >= 0 || values.push(el.value);
+    }
+    else {
+        index >= 0 && values.splice(index, 1);
+    }
+
+    return values;
 }
