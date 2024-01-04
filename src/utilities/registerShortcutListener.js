@@ -36,7 +36,7 @@ const aliases = {
 
 const controlKeys = ["ctrlKey", "altKey", "shiftKey", "metaKey"];
 
-export function createShortcut(target, shortcut, handler, eventName = "keydown", options = {}) {
+export function registerShortcutListener(target, shortcut, handler, eventName = "keydown", options = {}) {
     options = {
         ...options
     };

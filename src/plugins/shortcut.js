@@ -1,4 +1,4 @@
-import { createShortcut } from "@/utilities/createShortcut";
+import { registerShortcutListener } from "@/utilities/registerShortcutListener";
 import { single } from "@/utilities/utils";
 
 const optionKeys = ["stop", "passive", "prevent", "window", "document"];
@@ -26,7 +26,7 @@ export default function({ directive }) {
             .filter(m => !optionKeys.includes(m))
             .flatMap(s => s.split(","))
             .map(shortcut =>
-                createShortcut(
+                registerShortcutListener(
                     target,
                     shortcut,
                     listener,
