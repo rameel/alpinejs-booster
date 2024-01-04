@@ -3,6 +3,7 @@ import format from "@/plugins/format";
 import fragment from "@/plugins/fragment.js";
 import match from "@/plugins/switch.js";
 import router from "@/plugins/router";
+import shortcut from "@/plugins/shortcut";
 import template from "@/plugins/template.js";
 import when from "@/plugins/when.js";
 
@@ -12,6 +13,7 @@ export {
     fragment,
     match,
     router,
+    shortcut,
     template,
     when
 }

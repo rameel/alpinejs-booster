@@ -3,6 +3,7 @@ import { format } from "@/plugins";
 import { fragment } from "@/plugins";
 import { match } from "@/plugins";
 import { router } from "@/plugins";
+import { shortcut } from "@/plugins";
 import { template } from "@/plugins";
 import { when } from "@/plugins";
 
@@ -13,6 +14,7 @@ document.addEventListener("alpine:init", () => {
         fragment,
         match,
         router,
+        shortcut,
         template,
         when
     ]);
