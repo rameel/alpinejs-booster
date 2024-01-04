@@ -10,6 +10,12 @@ const names = new Map(
         "innerText",
         "textContent",
 
+        "videoHeight",
+        "videoWidth",
+
+        "naturalHeight",
+        "naturalWidth",
+
         "open"
     ].map(v => [v.toLowerCase(), v])
 );
@@ -56,6 +62,16 @@ export default function({ directive, mutateDom }) {
                 processContentEditable();
                 break;
 
+            case "videoHeight":
+            case "videoWidth":
+                processVideoSizing();
+                break;
+
+            case "naturalHeight":
+            case "naturalWidth":
+                processImageSizing();
+                break;
+
             case "open":
                 processDetails();
                 break;
@@ -93,6 +109,20 @@ export default function({ directive, mutateDom }) {
             if (el.hasAttribute("contenteditable")) {
                 effect(updateProperty);
                 cleanup(listen(el, "input", updateVariable));
+            }
+        }
+
+        function processVideoSizing() {
+            if (tagName === "VIDEO") {
+                updateVariable();
+                cleanup(listen(el, "resize", updateVariable));
+            }
+        }
+
+        function processImageSizing() {
+            if (tagName === "IMG") {
+                updateVariable();
+                cleanup(listen(el, "load", updateVariable));
             }
         }
 
