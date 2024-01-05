@@ -1,7 +1,6 @@
-import { createResizeObservable } from "@/utilities/createResizeObservable";
 import { createGetter, createSetter } from "@/utilities/evaluator";
-import { listen } from "@/utilities/utils";
-import { error } from "@/utilities/utils";
+import { createResizeObservable } from "@/utilities/createResizeObservable";
+import { error, listen } from "@/utilities/utils";
 
 const names = new Map(
     [
@@ -30,7 +29,12 @@ const names = new Map(
     ].map(v => [v.toLowerCase(), v])
 );
 
-export default function({ directive, mutateDom }) {
+export default function({ directive, mapAttributes, mutateDom, prefixed }) {
+    mapAttributes(({ name, value }) => ({
+        name: name.replace(/^&/, () => prefixed("bound:")),
+        value
+    }));
+
     directive("bound", (el, { expression, value }, { effect, evaluateLater, cleanup }) => {
         if (!value) {
             error("x-bound directive ???");
