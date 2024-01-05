@@ -1,5 +1,5 @@
 import { createGetter, createSetter } from "@/utilities/evaluator";
-import { createResizeObservable } from "@/utilities/createResizeObservable";
+import { observeResize } from "@/utilities/observeResize";
 import { clone, error, listen } from "@/utilities/utils";
 import { watch } from "@/utilities/watch";
 
@@ -189,7 +189,7 @@ export default function({ directive, entangle, evaluateLater, findClosest, mapAt
         }
 
         function processResizable() {
-            cleanup(createResizeObservable(el, updateVariable));
+            cleanup(observeResize(el, updateVariable));
             return true;
         }
 
