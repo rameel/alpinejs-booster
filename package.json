@@ -2,7 +2,30 @@
   "name": "alpinejs-booster",
   "version": "1.0.0-alpha",
   "description": "alpinejs-booster provides additional directives, magic functions, and utilities for a more productive development experience",
-  "main": "index.js",
+  "author": {
+    "name": "Rameel Burhan",
+    "email": "rameel-b@hotmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alpinejs-booster/alpinejs-booster.git"
+  },
+  "keywords": [
+    "alpine.js",
+    "alpinejs plugin",
+    "alpinejs directive",
+    "alpinejs magic",
+    "alpinejs helper",
+    "alpinejs history",
+    "alpinejs routing",
+    "alpinejs router",
+    "alpinejs hotkey",
+    "alpinejs shortcut",
+    "alpinejs binding"
+  ],
+  "main": "dist/alpinejs-booster.js",
+  "module": "dist/alpinejs-booster.esm.js",
   "scripts": {
     "dev": "rollup -c --watch",
     "build": "npm run clean && cross-env NODE_ENV=production rollup -c",
@@ -11,8 +34,6 @@
     "test:dev": "vitest",
     "coverage": "vitest run --coverage"
   },
-  "author": "rameel",
-  "license": "MIT",
   "dependencies": {
     "alpinejs": "^3.13.3"
   },
