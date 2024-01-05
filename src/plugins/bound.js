@@ -1,6 +1,7 @@
 import { createGetter, createSetter } from "@/utilities/evaluator";
 import { createResizeObservable } from "@/utilities/createResizeObservable";
-import { error, listen } from "@/utilities/utils";
+import { clone, error, listen } from "@/utilities/utils";
+import { watch } from "@/utilities/watch";
 
 const names = new Map(
     [
@@ -29,19 +30,20 @@ const names = new Map(
     ].map(v => [v.toLowerCase(), v])
 );
 
-export default function({ directive, mapAttributes, mutateDom, prefixed }) {
+export default function({ directive, entangle, evaluateLater, findClosest, mapAttributes, mutateDom, prefixed }) {
     mapAttributes(({ name, value }) => ({
         name: name.replace(/^&/, () => prefixed("bound:")),
         value
     }));
 
-    directive("bound", (el, { expression, value }, { effect, evaluateLater, cleanup }) => {
+    directive("bound", (el, { expression, value, modifiers }, { effect, cleanup }) => {
         if (!value) {
             error("x-bound directive ???");
             return;
         }
 
-        expression = expression.trim();
+        expression = expression?.trim();
+        expression ||= value;
 
         const property = names.get(
             value.trim().replace("-", "").toLowerCase()
@@ -49,57 +51,95 @@ export default function({ directive, mapAttributes, mutateDom, prefixed }) {
 
         expression || (expression = property);
 
-        const getValue = createGetter(evaluateLater, expression);
-        const setValue = createSetter(evaluateLater, expression);
+        const getValue = createGetter(evaluateLater, el, expression);
+        const setValue = createSetter(evaluateLater, el, expression);
 
         const updateProperty = () => el[property] !== getValue() && mutateDom(() => el[property] = getValue());
         const updateVariable = () => setValue(el[property]);
 
         const tagName = el.tagName.toUpperCase();
 
+        let processed;
+
         switch (property) {
             case "value":
-                processValue();
+                processed = processValue();
                 break;
 
             case "checked":
-                processChecked();
+                processed = processChecked();
                 break;
 
             case "files":
-                processFiles();
+                processed = processFiles();
                 break;
 
             case "innerHTML":
             case "innerText":
             case "textContent":
-                processContentEditable();
+                processed = processContentEditable();
                 break;
 
             case "videoHeight":
             case "videoWidth":
-                processMediaSizing("VIDEO", "resize");
+                processed = processMediaSizing("VIDEO", "resize");
                 break;
 
             case "naturalHeight":
             case "naturalWidth":
-                processMediaSizing("IMG", "load");
+                processed = processMediaSizing("IMG", "load");
                 break;
 
             case "clientHeight":
             case "clientWidth":
             case "offsetHeight":
             case "offsetWidth":
-                processResizable();
+                processed = processResizable();
                 break;
 
             case "open":
-                processDetails();
+                processed = processDetails();
                 break;
 
             case "group":
-                processGroup();
+                processed = processGroup();
                 break;
+        }
+
+        if (!processed) {
+            const modifier = modifiers.includes("in")  ? "in"  :
+                             modifiers.includes("out") ? "out" : "inout";
+
+            const sourceEl = expression === value
+                ? findClosest(el.parentNode, node => node._x_dataStack)
+                : el;
+
+            if (!el._x_dataStack || !sourceEl) {
+                error("x-bound directive ???");
+                return;
+            }
+
+            const source = {
+                get: createGetter(evaluateLater, sourceEl, expression),
+                set: createSetter(evaluateLater, sourceEl, expression),
+            };
+
+            const target = {
+                get: createGetter(evaluateLater, el, value),
+                set: createSetter(evaluateLater, el, value),
+            };
+
+            switch (modifier) {
+                case "in":
+                    cleanup(watch(() => source.get(), v => target.set(clone(v))));
+                    break;
+                case "out":
+                    cleanup(watch(() => target.get(), v => source.set(clone(v))));
+                    break;
+                default:
+                    cleanup(entangle(source, target));
+                    break;
+            }
         }
 
         function processValue() {
@@ -108,12 +148,12 @@ export default function({ directive, mapAttributes, mutateDom, prefixed }) {
                 case "TEXTAREA":
                     effect(updateProperty);
                     cleanup(listen(el, "input", updateVariable));
-                    break;
+                    return true;
 
                 case "SELECT":
                     effect(() => applySelectValues(el, getValue() ?? []));
                     cleanup(listen(el, "change", () => setValue(collectSelectedValues(el))));
-                    break;
+                    return true;
             }
         }
 
@@ -121,12 +161,14 @@ export default function({ directive, mapAttributes, mutateDom, prefixed }) {
             if (isCheckable(el)) {
                 effect(updateProperty);
                 cleanup(listen(el, "change", updateVariable));
+                return true;
             }
         }
 
         function processFiles() {
             if (tagName === "INPUT" && el.type === "file") {
                 cleanup(listen(el, "input", updateVariable));
+                return true;
             }
         }
 
@@ -134,6 +176,7 @@ export default function({ directive, mapAttributes, mutateDom, prefixed }) {
             if (el.hasAttribute("contenteditable")) {
                 effect(updateProperty);
                 cleanup(listen(el, "input", updateVariable));
+                return true;
             }
         }
 
@@ -141,17 +184,20 @@ export default function({ directive, mapAttributes, mutateDom, prefixed }) {
             if (tagName === name) {
                 updateVariable();
                 cleanup(listen(el, eventName, updateVariable));
+                return true;
             }
         }
 
         function processResizable() {
             cleanup(createResizeObservable(el, updateVariable));
+            return true;
         }
 
         function processDetails() {
             if (tagName === "DETAILS") {
                 effect(updateProperty);
                 cleanup(listen(el, "toggle", updateVariable));
+                return true;
             }
         }
 
@@ -164,6 +210,7 @@ export default function({ directive, mapAttributes, mutateDom, prefixed }) {
                         applyGroupValues(el, getValue() ?? [])));
 
                 cleanup(listen(el, "input", () => setValue(collectGroupValues(el, getValue()))));
+                return true;
             }
         }
     });
