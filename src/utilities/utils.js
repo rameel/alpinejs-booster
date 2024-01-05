@@ -30,3 +30,9 @@ export const single = (...fns) => (...args) => {
         fn && fn(...args);
     }
 };
+
+export function clone(value) {
+    return typeof value === "object"
+        ? JSON.parse(JSON.stringify(value))
+        : value
+}
