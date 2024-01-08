@@ -3,8 +3,8 @@ import { RoutePattern } from "@/utilities/RoutePattern";
 
 describe("RoutePattern", () => {
     test("pattern: ignore consecutive slashes", () => {
-        const route = new RoutePattern("////action ////{action}///");
-        expect(route.match("/action /process")).toEqual({ action: "process" });
+        const route = new RoutePattern("////action////{action}///");
+        expect(route.match("/action/process")).toEqual({ action: "process" });
     });
 
     test("pattern: ignores edge slashes", () => {
@@ -16,8 +16,6 @@ describe("RoutePattern", () => {
         [route1, route2, route3, route4].forEach(route => {
             expect(route.match("/home")).toBeTruthy();
             expect(route.match("/home/")).toBeTruthy();
-            expect(route.match("home/")).toBeTruthy();
-            expect(route.match("home")).toBeTruthy();
         });
 
         const route5 = new RoutePattern("/");
@@ -33,8 +31,16 @@ describe("RoutePattern", () => {
         [route1, route2].forEach(route => {
             expect(route.match("/home")).toBeTruthy();
             expect(route.match("/home/")).toBeTruthy();
-            expect(route.match("home/")).toBeTruthy();
-            expect(route.match("home")).toBeTruthy();
+        });
+    });
+
+    test("path: leading slashes", () => {
+        const route1 = new RoutePattern("/home");
+        const route2 = new RoutePattern("/home/");
+
+        [route1, route2].forEach(route => {
+            expect(route.match("home/")).toBeNull();
+            expect(route.match("home")).toBeNull();
         });
     });
 
@@ -72,7 +78,7 @@ describe("RoutePattern", () => {
 
     test("match: /{controller}/{action}/{id}", () => {
         const route = new RoutePattern("/{controller}/{action}/{id}");
-        const parameters = route.match("products/display/10");
+        const parameters = route.match("/products/display/10");
 
         expect(parameters).toBeTruthy();
         expect(parameters).toEqual({

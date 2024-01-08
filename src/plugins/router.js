@@ -136,8 +136,6 @@ export default function({ directive, addScopeToNode, mutateDom, initTree, reacti
         }
 
         function match(path) {
-            path = RoutePattern.normalize(path);
-
             for (let route of table) {
                 const params = route.match(path);
                 if (params !== null) {
