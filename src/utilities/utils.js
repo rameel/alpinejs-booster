@@ -18,6 +18,25 @@ export function isElement(el) {
     return el.nodeType === Node.ELEMENT_NODE;
 }
 
+export function isFunction(value) {
+    return typeof(value) === "function";
+}
+
+export function asyncify(fn) {
+    if (isFunction(fn) && fn.constructor?.name === "AsyncFunction") {
+        return fn;
+    }
+
+    return function(...args) {
+        const result = fn.apply(this, args);
+        if (isFunction(result.then)) {
+            return result;
+        }
+
+        return Promise.resolve(result);
+    }
+}
+
 export function listen(target, type, listener, ...args) {
     target.addEventListener(type, listener, ...args);
     return () => {
