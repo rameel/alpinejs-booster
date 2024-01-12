@@ -5,17 +5,14 @@ let location;
 
 const hashApi = {
     get path() {
-        return location.hash.slice(1);
+        return location.hash.slice(1) || "/";
     },
     get "location"() {
         return location;
     },
     "navigate"(path, replace = false) {
-        const index = path.indexOf("#");
-        index >= 0 && (path = path.slice(0, index));
-
-        history[replace ? "replaceState" : "pushState"]({}, "", "#" + path);
-        location.refresh();
+        path.indexOf("#") < 0 && (path = "#" + path);
+        navigate(path, replace);
     }
 };
 
@@ -27,10 +24,14 @@ const html5Api = {
         return location;
     },
     "navigate"(path, replace = false) {
-        history[replace ? "replaceState" : "pushState"]({}, "", path);
-        location.refresh();
+        navigate(path, replace);
     }
 };
+
+function navigate(path, replace) {
+    history[replace ? "replaceState" : "pushState"]({}, "", path);
+    location.refresh();
+}
 
 const knownApi = {
     html5: html5Api,

@@ -124,8 +124,7 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
 
                 e.preventDefault();
 
-                // TODO: FIX THIS
-                router.navigate(el.pathname);
+                router.navigate(`${ el.pathname }${ el.search }${ el.hash }`);
             });
 
             cleanup(unsubscribe);
