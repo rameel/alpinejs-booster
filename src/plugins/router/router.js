@@ -74,7 +74,8 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
 
                 router.active = route;
 
-                if (router.outlet) {
+                const outlet = router.outlet;
+                if (outlet) {
                     route.view().then(html => {
                         if (state.path !== path
                             || state.pattern !== route.template
@@ -83,9 +84,9 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
                         }
 
                         route.nodes = [...html.cloneNode(true).childNodes];
-                        isTemplate(router.outlet)
-                            ? route.nodes.forEach(node => router.outlet.parentElement.insertBefore(node, router.outlet))
-                            : route.nodes.forEach(node => router.outlet.append(node));
+                        isTemplate(outlet)
+                            ? route.nodes.forEach(node => outlet.parentElement.insertBefore(node, outlet))
+                            : route.nodes.forEach(node => outlet.append(node));
                     });
                 }
             }
