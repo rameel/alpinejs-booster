@@ -66,11 +66,11 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
                     return;
                 }
 
+                clear();
+
                 state.path = path;
                 state.pattern = route.template;
                 state.params = params;
-
-                clear();
 
                 router.active = route;
 
@@ -92,7 +92,7 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
             }
 
             function clear() {
-                router.active?.nodes.forEach(n => n.remove());
+                router.active?.nodes?.forEach(n => n.remove());
                 router.active = null;
             }
 
@@ -134,6 +134,7 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
         function processOutlet() {
             router.outlet && error("x-router:outlet already specified", router.outlet);
             router.outlet || (router.outlet = el);
+            cleanup(() => router.outlet = null);
         }
     });
 
