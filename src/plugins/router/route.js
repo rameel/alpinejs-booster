@@ -37,11 +37,7 @@ export default function({ directive, magic, findClosest: closest }) {
                 return;
             }
 
-            const view = () => new Promise(resolve => {
-                const fragment = new DocumentFragment();
-                fragment.append(...el.content.cloneNode(true).childNodes);
-                resolve(fragment);
-            });
+            const view = () => new Promise(resolve => resolve(el.content));
 
             el._x_route = Object.assign(new RoutePattern(expression), { el, view, handler: () => Promise.resolve() });
             router.routes.push(el._x_route);
