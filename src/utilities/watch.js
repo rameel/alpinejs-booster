@@ -21,7 +21,7 @@ export function watch(getValue, callback, options = null) {
         }
 
         if (initialized || (options?.immediate ?? true)) {
-            // To prevent the watcher from detecting its own dependencies
+            // Prevent the watcher from detecting its own dependencies
             queueMicrotask(() => {
                 callback(newValue, oldValue);
                 oldValue = newValue;
