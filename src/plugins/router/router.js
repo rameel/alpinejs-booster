@@ -29,6 +29,11 @@ export default function({ directive, magic, reactive }) {
         }
 
         function processRouter() {
+            if (isTemplate(el)) {
+                warn("x-router cannot be used on a 'template' tag");
+                return;
+            }
+
             const values = reactive({
                 pattern: "",
                 path: "",
