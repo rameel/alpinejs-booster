@@ -13,17 +13,15 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
         for (let node = el.content.firstElementChild; node; node = node.nextElementSibling) {
             const expr = node.getAttribute("x-case");
             if (expr !== null) {
-                if (hasDefault()) {
+                if (__DEV && hasDefault()) {
                     warn("The x-case directive cannot be appear after x-default");
-                    continue;
                 }
 
                 branches.push({ el: node, expression: expr });
             }
             else if (node.hasAttribute("x-default")) {
-                if (hasDefault()) {
+                if (__DEV && hasDefault()) {
                     warn("Only one x-default directive is allowed");
-                    continue;
                 }
 
                 branches.push({ el: node, expression: "true", default: true });
