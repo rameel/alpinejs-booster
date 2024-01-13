@@ -1,7 +1,8 @@
+import { createGetter } from "@/utilities/evaluator";
 import { isElement, isTemplate, warn } from "@/utilities/utils.js";
 
 export default function({ directive, addScopeToNode, mutateDom, initTree }) {
-    directive("switch", (el, { expression }, { cleanup, effect, evaluate }) => {
+    directive("switch", (el, { }, { cleanup, effect, evaluateLater }) => {
         if (!isTemplate(el)) {
             warn("x-switch can only be used on a 'template' tag");
             return;
@@ -17,14 +18,14 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
                     warn("The x-case directive cannot be appear after x-default");
                 }
 
-                branches.push({ el: node, expression: expr });
+                branches.push({ el: node, getValue: createGetter(evaluateLater, expr) });
             }
             else if (node.hasAttribute("x-default")) {
                 if (__DEV && hasDefault()) {
                     warn("Only one x-default directive is allowed");
                 }
 
-                branches.push({ el: node, expression: "true", default: true });
+                branches.push({ el: node, getValue: () => true, default: true });
             }
             else {
                 warn("Element has no x-case or x-default directive and will be ignored", node);
@@ -63,7 +64,7 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
             let active;
 
             for (let branch of branches) {
-                if (evaluate(branch.expression) && !active) {
+                if (branch.getValue() && !active) {
                     active = branch;
                 }
             }
