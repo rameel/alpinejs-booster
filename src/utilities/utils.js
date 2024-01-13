@@ -13,7 +13,7 @@ export function isNullish(value) {
 }
 
 export function isTemplate(el) {
-    return el.tagName === "TEMPLATE";
+    return el instanceof HTMLTemplateElement;
 }
 
 export function isElement(el) {
