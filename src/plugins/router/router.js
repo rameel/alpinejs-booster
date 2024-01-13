@@ -28,7 +28,7 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
         }
 
         function processRouter() {
-            const state = reactive({
+            const values = reactive({
                 pattern: "",
                 path: "",
                 params: ""
@@ -43,7 +43,7 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
                 outlet: null,
                 active: null,
                 history: api,
-                values: state,
+                values: values,
                 async match(path) {
                     for (let route of this.routes) {
                         const params = route.match(path);
@@ -63,24 +63,24 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
             el._x_router = router;
 
             function activate(route, path, params) {
-                if (route.nodes?.length && state.path === path) {
+                if (route.nodes?.length && values.path === path) {
                     return;
                 }
 
                 clear();
 
-                state.path = path;
-                state.pattern = route.template;
-                state.params = params;
+                values.path = path;
+                values.pattern = route.template;
+                values.params = params;
 
                 router.active = route;
 
                 const outlet = router.outlet;
                 if (outlet) {
                     route.view().then(html => {
-                        if (state.path !== path
-                            || state.pattern !== route.template
-                            || JSON.stringify(state.params) !== JSON.stringify(params)) {
+                        if (values.path !== path
+                            || values.pattern !== route.template
+                            || JSON.stringify(values.params) !== JSON.stringify(params)) {
                             return;
                         }
 
