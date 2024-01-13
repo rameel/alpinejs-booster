@@ -1,5 +1,7 @@
-export function warn(...args) {
-    console.warn("alpinejs-booster:", ...args);
+export function assert(value, message) {
+    if (__DEV && !value) {
+        throw new Error(message || "Assertion failed");
+    }
 }
 
 export function warn(...args) {

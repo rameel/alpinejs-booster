@@ -1,4 +1,8 @@
+import { assert } from "@/utilities/utils";
+
 export function watch(getValue, callback, options = null) {
+    assert(Alpine, "Alpine is not defined");
+
     const {
         effect,
         release,
