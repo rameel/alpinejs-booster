@@ -131,20 +131,15 @@ export default function({ directive, magic, reactive }) {
             });
 
             if (expression) {
-                const active = createGetter(evaluateLater, "$active");
-                let classlist = evaluate(expression);
-                Array.isArray(classlist) || (classlist = [classlist]);
+                const isActive = createGetter(evaluateLater, "$active");
+                const list = asArray(evaluate(expression));
 
                 effect(() => {
-                    if (active()) {
-                        el.classList.add(...classlist);
-                    }
-                    else {
-                        el.classList.remove(...classlist);
-                    }
+                    const active = isActive();
+                    list.forEach(cls => el.classList.toggle(cls, active));
                 });
 
-                cleanup(() => el.classList.remove(...classlist));
+                cleanup(() => el.classList.remove(...list));
             }
 
             cleanup(unsubscribe);
