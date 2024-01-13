@@ -22,6 +22,10 @@ export function isFunction(value) {
     return typeof(value) === "function";
 }
 
+export function asArray(value) {
+    return Array.isArray(value) ? value : [value];
+}
+
 export function asyncify(fn) {
     if (isFunction(fn) && fn.constructor?.name === "AsyncFunction") {
         return fn;

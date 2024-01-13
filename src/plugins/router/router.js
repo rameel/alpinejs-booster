@@ -1,9 +1,10 @@
 import { createHistory } from "@/plugins/router/helpers/history";
 import { error, isNullish, isTemplate, listen } from "@/utilities/utils";
+import { createGetter } from "@/utilities/evaluator";
 import { watch } from "@/utilities/watch";
 
 export default function({ directive, findClosest: closest, magic, reactive }) {
-    directive("router", (el, { expression, value }, { cleanup, evaluate }) => {
+    directive("router", (el, { expression, value }, { cleanup, effect, evaluate, evaluateLater }) => {
         value || (value = "html5");
 
         const router = closest(el, node => node._x_router)?._x_router;
@@ -128,6 +129,23 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
 
                 router.navigate(`${ el.pathname }${ el.search }${ el.hash }`);
             });
+
+            if (expression) {
+                const active = createGetter(evaluateLater, "$active");
+                let classlist = evaluate(expression);
+                Array.isArray(classlist) || (classlist = [classlist]);
+
+                effect(() => {
+                    if (active()) {
+                        el.classList.add(...classlist);
+                    }
+                    else {
+                        el.classList.remove(...classlist);
+                    }
+                });
+
+                cleanup(() => el.classList.remove(...classlist));
+            }
 
             cleanup(unsubscribe);
         }
