@@ -18,6 +18,29 @@ export function isElement(el) {
     return el.nodeType === Node.ELEMENT_NODE;
 }
 
+export function isFunction(value) {
+    return typeof(value) === "function";
+}
+
+export function asArray(value) {
+    return Array.isArray(value) ? value : [value];
+}
+
+export function asyncify(fn) {
+    if (isFunction(fn) && fn.constructor?.name === "AsyncFunction") {
+        return fn;
+    }
+
+    return function(...args) {
+        const result = fn.apply(this, args);
+        if (isFunction(result.then)) {
+            return result;
+        }
+
+        return Promise.resolve(result);
+    }
+}
+
 export function listen(target, type, listener, ...args) {
     target.addEventListener(type, listener, ...args);
     return () => {
@@ -35,4 +58,17 @@ export function clone(value) {
     return typeof value === "object"
         ? JSON.parse(JSON.stringify(value))
         : value
+}
+
+export function closest(el, callback) {
+    while (el) {
+        if (callback(el)) {
+            break;
+        }
+
+        el = el._x_teleportBack ?? el;
+        el = el.parentElement;
+    }
+
+    return el;
 }

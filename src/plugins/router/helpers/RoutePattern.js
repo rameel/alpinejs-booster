@@ -92,8 +92,7 @@ export class RoutePattern {
         );
     }
 
-    match(path, normalize = true) {
-        normalize && (path = normalizePath(path));
+    match(path) {
         let result = this.#regex.exec(path);
 
         if (isNullish(result)) {
@@ -135,7 +134,7 @@ export class RoutePattern {
         return result;
     }
 
-    build(values) {
+    resolve(values) {
         values = new Map(Object.entries(values));
         const segments = [];
 
@@ -188,10 +187,6 @@ export class RoutePattern {
         return result[0] !== "/"
             ? "/" + result
             : result;
-    }
-
-    static normalize(path) {
-        return normalizePath(path);
     }
 }
 
@@ -429,16 +424,4 @@ function parse(pattern, factories) {
     function throwError(message = "Invalid pattern") {
         throw new Error(`${ message }: ${ pattern }`);
     }
-}
-
-function normalizePath(path) {
-    if (path === "" || path === "/") {
-        return "/";
-    }
-
-    return "/" + path
-        .trim()
-        .split("/")
-        .filter(s => s.length)
-        .join("/");
 }
