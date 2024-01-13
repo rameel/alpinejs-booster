@@ -5,8 +5,7 @@ export function watch(getValue, callback, options = null) {
 
     const {
         effect,
-        release,
-        onElRemoved
+        release
     } = Alpine;
 
     let newValue;
@@ -32,8 +31,5 @@ export function watch(getValue, callback, options = null) {
         initialized = true;
     });
 
-    const dispose = () => release(handle);
-    options?.el && onElRemoved(options.el, dispose);
-
-    return dispose;
+    return () => release(handle);
 }
