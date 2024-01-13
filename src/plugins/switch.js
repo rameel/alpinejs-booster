@@ -1,5 +1,5 @@
 import { createGetter } from "@/utilities/evaluator";
-import { isElement, isTemplate, warn } from "@/utilities/utils.js";
+import { isElement, isTemplate, warn } from "@/utilities/utils";
 
 export default function({ directive, addScopeToNode, mutateDom, initTree }) {
     directive("switch", (el, { }, { cleanup, effect, evaluateLater }) => {

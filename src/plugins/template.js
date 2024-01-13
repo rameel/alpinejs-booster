@@ -1,4 +1,4 @@
-import { isTemplate, warn } from "@/utilities/utils.js";
+import { isTemplate, warn } from "@/utilities/utils";
 
 export default function(alpine) {
     alpine.directive("template", (el, { expression }) => {
