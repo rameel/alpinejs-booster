@@ -21,7 +21,7 @@ const terserOptions = {
     compress: {
         passes: 5,
         ecma: 2020,
-        drop_console: true,
+        drop_console: false,
         drop_debugger: true,
         pure_getters: true,
         arguments: true,
@@ -34,8 +34,9 @@ const terserOptions = {
 const plugins = [
     resolve(),
     production && size(),
-    production && replace({
+    replace({
         "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+        "__DEV": !production,
         preventAssignment: true
     }),
     alias({
