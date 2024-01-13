@@ -7,6 +7,8 @@ export default function({ directive, mutateDom }) {
         const placeholderRegex = /{{(?<expr>.+?)}}/g;
         const isOnce = modifiers.includes("once");
 
+        process(el);
+
         function createEval(expression) {
             let getter = cache.get(expression);
             if (isNullish(getter)) {
@@ -87,7 +89,5 @@ export default function({ directive, mutateDom }) {
                 process(child);
             }
         }
-
-        process(el);
     });
 }
