@@ -134,7 +134,7 @@ export class RoutePattern {
         return result;
     }
 
-    build(values) {
+    resolve(values) {
         values = new Map(Object.entries(values));
         const segments = [];
 
