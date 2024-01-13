@@ -1,20 +1,20 @@
-import { error, isTemplate } from "@/utilities/utils.js";
+import { isTemplate, warn } from "@/utilities/utils.js";
 
 export default function(alpine) {
     alpine.directive("template", (el, { expression }) => {
         if (isTemplate(el)) {
-            error("x-template cannot be used on a 'template' tag");
+            warn("x-template cannot be used on a 'template' tag");
             return;
         }
 
         const tpl = document.getElementById(expression);
         if (!tpl) {
-            error(`Template #'${ expression }' not found`);
+            warn(`Template #'${ expression }' not found`);
             return;
         }
 
         if (!isTemplate(tpl)) {
-            error("x-template directive can only reference the template tag");
+            warn("x-template directive can only reference the template tag");
             return;
         }
 

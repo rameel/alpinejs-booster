@@ -1,16 +1,16 @@
 import { createHistory } from "@/plugins/router/helpers/history";
-import { error, isNullish, isTemplate, listen } from "@/utilities/utils";
 import { createGetter } from "@/utilities/evaluator";
+import { asArray, closest, isNullish, isTemplate, listen, warn } from "@/utilities/utils";
 import { watch } from "@/utilities/watch";
 
-export default function({ directive, findClosest: closest, magic, reactive }) {
+export default function({ directive, magic, reactive }) {
     directive("router", (el, { expression, value }, { cleanup, effect, evaluate, evaluateLater }) => {
         value || (value = "html5");
 
         const router = closest(el, node => node._x_router)?._x_router;
 
         if (isNullish(router) && (value === "outlet" || value === "link")) {
-            error(`no x-router directive found`);
+            warn(`no x-router directive found`);
             return;
         }
 
@@ -151,7 +151,7 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
         }
 
         function processOutlet() {
-            router.outlet && error("x-router:outlet already specified", router.outlet);
+            router.outlet && warn("x-router:outlet already specified", router.outlet);
             router.outlet || (router.outlet = el);
             cleanup(() => router.outlet = null);
         }

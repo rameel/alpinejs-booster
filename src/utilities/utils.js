@@ -2,8 +2,8 @@ export function warn(...args) {
     console.warn("alpinejs-booster:", ...args);
 }
 
-export function error(...args) {
-    console.error("alpinejs-booster:", ...args);
+export function warn(...args) {
+    console.warn("alpinejs-booster:", ...args);
 }
 
 export function isNullish(value) {

@@ -1,4 +1,4 @@
-import { error } from "@/utilities/utils";
+import { warn } from "@/utilities/utils";
 
 const cache = new Map();
 const pendings = new Map();
@@ -18,7 +18,7 @@ export async function loadTemplate(path) {
         const result = await fetch(path);
         if (!result.ok) {
             pendings.delete(path);
-            error(`Failed to load template from ${ path }`);
+            warn(`Failed to load template from ${ path }`);
 
             return new DocumentFragment();
         }

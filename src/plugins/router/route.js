@@ -1,18 +1,18 @@
 import { RoutePattern } from "@/plugins/router/helpers/RoutePattern";
 import { loadTemplate } from "@/utilities/loadTemplate";
-import { asyncify, error, isNullish, isTemplate } from "@/utilities/utils";
+import { asyncify, closest, isNullish, isTemplate, warn } from "@/utilities/utils";
 
-export default function({ directive, magic, findClosest: closest }) {
+export default function({ directive, magic }) {
     directive("route", (el, { expression, value, modifiers }, { cleanup, evaluate }) => {
         if (!isTemplate(el)) {
-            error("x-route can only be used on a 'template' tag");
+            warn("x-route can only be used on a 'template' tag");
             return;
         }
 
         const route = closest(el, n => n._x_route)?._x_route;
 
         if (isNullish(route) && (value === "view" || value === "handler")) {
-            error(`no x-route directive found`);
+            warn(`no x-route directive found`);
             return;
         }
 
@@ -33,7 +33,7 @@ export default function({ directive, magic, findClosest: closest }) {
         function processRoute() {
             const router = closest(el, n => n._x_router)?._x_router;
             if (isNullish(router)) {
-                error(`no x-router directive found`);
+                warn(`no x-router directive found`);
                 return;
             }
 

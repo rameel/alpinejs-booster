@@ -1,9 +1,9 @@
-import { error, isElement, isTemplate, warn } from "@/utilities/utils.js";
+import { isElement, isTemplate, warn } from "@/utilities/utils.js";
 
 export default function({ directive, addScopeToNode, mutateDom, initTree }) {
     directive("switch", (el, { expression }, { cleanup, effect, evaluate }) => {
         if (!isTemplate(el)) {
-            error("x-switch can only be used on a 'template' tag");
+            warn("x-switch can only be used on a 'template' tag");
             return;
         }
 

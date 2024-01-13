@@ -1,5 +1,5 @@
 import { useLocation } from "@/utilities/useLocation";
-import { error } from "@/utilities/utils";
+import { warn } from "@/utilities/utils";
 
 let location;
 
@@ -54,7 +54,7 @@ export function createHistory(name) {
     let api = knownApi[name];
 
     if (!api) {
-        error(`Unknown history API: '${ name }'`);
+        warn(`Unknown history API: '${ name }'`);
         api = html5Api;
     }
 

@@ -1,9 +1,9 @@
-import { error, isElement, isTemplate } from "@/utilities/utils.js";
+import { isElement, isTemplate, warn } from "@/utilities/utils.js";
 
 export default function({ directive, addScopeToNode, mutateDom, initTree }) {
     directive("when", (el, { expression }, { cleanup, effect, evaluate }) => {
         if (!isTemplate(el)) {
-            error("x-when can only be used on a 'template' tag");
+            warn("x-when can only be used on a 'template' tag");
             return;
         }
 
