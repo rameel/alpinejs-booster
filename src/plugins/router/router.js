@@ -42,6 +42,7 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
                 routes: [],
                 outlet: null,
                 active: null,
+                history: api,
                 values: state,
                 async match(path) {
                     for (let route of this.routes) {
@@ -139,4 +140,14 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
     });
 
     magic("router", el => closest(el, n => n._x_router)?._x_router);
+
+    magic("active", el => {
+        const router = closest(el, node => node._x_router)?._x_router;
+        if (isNullish(router)) {
+            warn("No x-router directive found");
+            return;
+        }
+
+        return router.history.resolve(el.href) === router.values.path;
+    });
 }

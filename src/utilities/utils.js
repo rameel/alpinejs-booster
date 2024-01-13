@@ -55,3 +55,16 @@ export function clone(value) {
         ? JSON.parse(JSON.stringify(value))
         : value
 }
+
+export function closest(el, callback) {
+    while (el) {
+        if (callback(el)) {
+            break;
+        }
+
+        el = el._x_teleportBack ?? el;
+        el = el.parentElement;
+    }
+
+    return el;
+}

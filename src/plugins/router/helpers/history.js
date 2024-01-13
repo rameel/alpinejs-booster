@@ -10,6 +10,12 @@ const hashApi = {
     get "location"() {
         return location;
     },
+    resolve(path) {
+        const url = new URL(path);
+        return url.hash
+            ? url.hash.slice(1) || "/"
+            : url.pathname;
+    },
     "navigate"(path, replace = false) {
         path.indexOf("#") < 0 && (path = "#" + path);
         navigate(path, replace);
@@ -22,6 +28,9 @@ const html5Api = {
     },
     get "location"() {
         return location;
+    },
+    resolve(path) {
+        return new URL(path).pathname;
     },
     "navigate"(path, replace = false) {
         navigate(path, replace);
