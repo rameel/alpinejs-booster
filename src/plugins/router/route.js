@@ -1,4 +1,4 @@
-import { RoutePattern } from "@/plugins/router/helpers/RoutePattern";
+import { RoutePattern } from "@/plugins/router/RoutePattern";
 import { loadTemplate } from "@/utilities/loadTemplate";
 import { asyncify, closest, isNullish, isTemplate, warn } from "@/utilities/utils";
 

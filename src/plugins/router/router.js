@@ -1,4 +1,4 @@
-import { createHistory } from "@/plugins/router/helpers/history";
+import { createHistory } from "@/plugins/router/history";
 import { createGetter } from "@/utilities/evaluator";
 import { asArray, closest, isNullish, isTemplate, listen, warn } from "@/utilities/utils";
 import { watch } from "@/utilities/watch";
