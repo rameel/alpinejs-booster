@@ -38,7 +38,7 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
 
     directive("bound", (el, { expression, value, modifiers }, { effect, cleanup }) => {
         if (!value) {
-            warn("x-bound directive ???");
+            warn("x-bound directive expects the presence of a bound property name");
             return;
         }
 
@@ -114,8 +114,13 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
                 ? closest(el.parentNode, node => node._x_dataStack)
                 : el;
 
-            if (!el._x_dataStack || !sourceEl) {
-                warn("x-bound directive ???");
+            if (!el._x_dataStack) {
+                warn("x-bound directive requires the presence of the x-data directive to bind component properties");
+                return;
+            }
+
+            if (!sourceEl) {
+                warn(`x-bound directive cannot find the parent scope where the '${ value }' property is defined`);
                 return;
             }
 
