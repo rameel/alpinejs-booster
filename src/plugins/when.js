@@ -1,7 +1,8 @@
+import { createGetter } from "@/utilities/evaluator";
 import { isElement, isTemplate, warn } from "@/utilities/utils.js";
 
 export default function({ directive, addScopeToNode, mutateDom, initTree }) {
-    directive("when", (el, { expression }, { cleanup, effect, evaluate }) => {
+    directive("when", (el, { expression }, { cleanup, effect, evaluateLater }) => {
         if (!isTemplate(el)) {
             warn("x-when can only be used on a 'template' tag");
             return;
@@ -32,8 +33,10 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
             }
         }
 
+        const getValue = createGetter(evaluateLater, expression);
+
         effect(() => {
-            if (evaluate(expression)) {
+            if (getValue()) {
                 activate();
             }
             else {
