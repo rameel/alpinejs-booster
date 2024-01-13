@@ -1,13 +1,29 @@
+import { createGetter } from "@/utilities/evaluator";
+import { isNullish } from "@/utilities/utils";
+
 export default function({ directive, mutateDom }) {
-    directive("format", (el, { modifiers }, { effect, evaluate }) => {
+    directive("format", (el, { modifiers }, { effect, evaluateLater }) => {
+        const cache = new Map;
         const placeholderRegex = /{{(?<expr>.+?)}}/g;
         const isOnce = modifiers.includes("once");
+
+        function createEval(expression) {
+            let getter = cache.get(expression);
+            if (isNullish(getter)) {
+                getter = createGetter(evaluateLater, expression);
+                cache.set(expression, getter);
+            }
+
+            return getter;
+        }
 
         function update(callback) {
             if (isOnce) {
                 mutateDom(() => {
                     callback();
                 });
+
+                cache.clear();
             }
             else {
                 effect(() => {
@@ -42,9 +58,11 @@ export default function({ directive, mutateDom }) {
                         fragment.appendChild(document.createTextNode(tokens[i]));
                     }
                     else {
+                        const getValue = createEval(tokens[i]);
                         const text = document.createTextNode("");
-                        fragment.appendChild(text);
-                        update(() => text.textContent = evaluate(tokens[i]));
+
+                        fragment.append(text);
+                        update(() => text.textContent = getValue());
                     }
                 }
 
@@ -59,7 +77,7 @@ export default function({ directive, mutateDom }) {
                 const matches = [...attr.value.matchAll(placeholderRegex)];
                 if (matches.length) {
                     const template = attr.value;
-                    update(() => attr.value = template.replace(placeholderRegex, (_, expr) => evaluate(expr)));
+                    update(() => attr.value = template.replace(placeholderRegex, (_, expr) => createEval(expr)()));
                 }
             }
         }
