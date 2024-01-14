@@ -2,7 +2,7 @@ import { RoutePattern } from "@/plugins/router/RoutePattern";
 import { loadTemplate } from "@/utilities/loadTemplate";
 import { asyncify, closest, isNullish, isTemplate, warn } from "@/utilities/utils";
 
-export default function({ directive, magic }) {
+export default function({ directive, magic, $data }) {
     directive("route", (el, { expression, value, modifiers }, { cleanup, evaluate }) => {
         if (!isTemplate(el)) {
             warn("x-route can only be used on a 'template' tag");
@@ -50,11 +50,13 @@ export default function({ directive, magic }) {
         function processHandler() {
             expression || (expression = "[]");
             expression.startsWith("[") || (expression = `[${ expression }]`);
+
             const handlers = evaluate(expression).map(asyncify);
+            const self = $data(el);
 
             route.handler = async context => {
                 for (let handler of handlers) {
-                    if (await handler(context) === false) {
+                    if (await handler.call(self, context) === false) {
                         return false;
                     }
                 }
