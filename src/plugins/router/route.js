@@ -56,8 +56,9 @@ export default function({ directive, magic, $data }) {
 
             route.handler = async context => {
                 for (let handler of handlers) {
-                    if (await handler.call(self, context) === false) {
-                        return false;
+                    const r = await handler.call(self, context);
+                    if (!isNullish(r)) {
+                        return r;
                     }
                 }
             };

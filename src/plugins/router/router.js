@@ -55,7 +55,7 @@ export default function({ directive, magic, reactive }) {
                         const params = route.match(path);
                         if (params) {
                             const context = { router, route, params, path };
-                            if (route.handler && await route.handler(context) !== false) {
+                            if (await route.handler(context) !== false) {
                                 return context;
                             }
                         }
@@ -63,6 +63,7 @@ export default function({ directive, magic, reactive }) {
                 },
                 navigate(path, replace = false) {
                     api.navigate(path, replace);
+                    return true;
                 }
             };
 
@@ -108,8 +109,11 @@ export default function({ directive, magic, reactive }) {
 
             const dispose = watch(() => api.path, async path => {
                 const result = await router.match(path);
-                if (result && path === api.path) {
-                    activate(result.route, result.path, result.params);
+
+                if (result) {
+                    if (path === api.path) {
+                        activate(result.route, result.path, result.params);
+                    }
                 }
                 else {
                     clear();
