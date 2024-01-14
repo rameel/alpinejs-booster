@@ -35,7 +35,7 @@ export function asyncify(fn) {
 
     return function(...args) {
         const result = fn.apply(this, args);
-        if (isFunction(result.then)) {
+        if (isFunction(result?.then)) {
             return result;
         }
 
