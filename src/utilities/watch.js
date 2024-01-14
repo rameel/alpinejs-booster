@@ -22,10 +22,10 @@ export function watch(getValue, callback, options = null) {
 
         if (initialized || (options?.immediate ?? true)) {
             // Prevent the watcher from detecting its own dependencies
-            queueMicrotask(() => {
+            setTimeout(() => {
                 callback(newValue, oldValue);
                 oldValue = newValue;
-            });
+            }, 0);
         }
 
         initialized = true;
