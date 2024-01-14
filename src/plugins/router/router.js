@@ -99,8 +99,11 @@ export default function({ directive, magic, reactive }) {
             }
 
             function clear() {
-                router.active?.nodes?.forEach(n => n.remove());
-                router.active = null;
+                if (router.active) {
+                    router.active.nodes?.forEach(n => n.remove());
+                    router.active.nodes = null;
+                    router.active = null;
+                }
             }
 
             const dispose = watch(() => api.path, async path => {
