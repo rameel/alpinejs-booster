@@ -15,8 +15,14 @@ export async function loadTemplate(path) {
     }
 
     const request = (async () => {
-        const result = await fetch(path);
-        if (!result.ok) {
+        let result;
+        try {
+            result = await fetch(path);
+        }
+        catch {
+        }
+
+        if (!result?.ok) {
             pendings.delete(path);
             warn(`Failed to load template from ${ path }`);
 
