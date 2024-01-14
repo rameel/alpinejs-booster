@@ -4,7 +4,7 @@ let observable = null;
 export function observeResize(el, listener) {
     observable ??= new ResizeObserver(entries => {
         for (const e of entries) {
-            for (const callback of e.target[key].values()) {
+            for (const callback of e.target[key]?.values() ?? []) {
                 callback(e);
             }
         }
@@ -20,7 +20,7 @@ export function observeResize(el, listener) {
 
         if (el[key].size === 0) {
             observable.unobserve(el);
-            delete el[key];
+            el[key] = null;
         }
     };
 }
