@@ -18,7 +18,7 @@ export function observeResize(el, listener) {
     return () => {
         el[key].delete(listener);
 
-        if (el[key].size === 0) {
+        if (!el[key].size) {
             observable.unobserve(el);
             el[key] = null;
         }
