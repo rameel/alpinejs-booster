@@ -43,10 +43,10 @@ export function asyncify(fn) {
     }
 }
 
-export function listen(target, type, listener, ...args) {
-    target.addEventListener(type, listener, ...args);
+export function listen(target, type, listener, options) {
+    target.addEventListener(type, listener, options);
     return () => {
-        target.removeEventListener(type, listener, ...args);
+        target.removeEventListener(type, listener, options);
     };
 }
 
