@@ -1,11 +1,13 @@
 const key = Symbol();
-let observable = null;
+let observable;
 
 export function observeResize(el, listener) {
     observable ??= new ResizeObserver(entries => {
-        for (const e of entries)
-            for (const callback of e.target[key].values())
+        for (const e of entries) {
+            for (const callback of e.target[key]?.values() ?? []) {
                 callback(e);
+            }
+        }
     });
 
     el[key] || (el[key] = new Set());
@@ -16,9 +18,9 @@ export function observeResize(el, listener) {
     return () => {
         el[key].delete(listener);
 
-        if (el[key].size === 0) {
+        if (!el[key].size) {
             observable.unobserve(el);
-            delete el[key];
+            el[key] = null;
         }
     };
 }

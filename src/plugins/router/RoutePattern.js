@@ -108,9 +108,9 @@ export class RoutePattern {
                 continue;
             }
 
-            value
-                || isNullish(parameter.default)
-                || (value = parameter.default);
+            if (!value && !isNullish(parameter.default)) {
+                value = parameter.default;
+            }
 
             const values = parameter.catchAll
                 ? value.split("/").filter(v => v.length)

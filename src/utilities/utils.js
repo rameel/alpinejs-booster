@@ -1,9 +1,11 @@
-export function warn(...args) {
-    console.warn("alpinejs-booster:", ...args);
+export function assert(value, message) {
+    if (__DEV && !value) {
+        throw new Error(message || "Assertion failed");
+    }
 }
 
-export function error(...args) {
-    console.error("alpinejs-booster:", ...args);
+export function warn(...args) {
+    console.warn("alpinejs-booster:", ...args);
 }
 
 export function isNullish(value) {
@@ -11,7 +13,7 @@ export function isNullish(value) {
 }
 
 export function isTemplate(el) {
-    return el.tagName === "TEMPLATE";
+    return el instanceof HTMLTemplateElement;
 }
 
 export function isElement(el) {
@@ -33,7 +35,7 @@ export function asyncify(fn) {
 
     return function(...args) {
         const result = fn.apply(this, args);
-        if (isFunction(result.then)) {
+        if (isFunction(result?.then)) {
             return result;
         }
 
@@ -41,10 +43,10 @@ export function asyncify(fn) {
     }
 }
 
-export function listen(target, type, listener, ...args) {
-    target.addEventListener(type, listener, ...args);
+export function listen(target, type, listener, options) {
+    target.addEventListener(type, listener, options);
     return () => {
-        target.removeEventListener(type, listener, ...args);
+        target.removeEventListener(type, listener, options);
     };
 }
 

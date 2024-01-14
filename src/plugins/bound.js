@@ -1,6 +1,6 @@
 import { createGetter, createSetter } from "@/utilities/evaluator";
 import { observeResize } from "@/utilities/observeResize";
-import { clone, error, listen } from "@/utilities/utils";
+import { clone, closest, listen, warn } from "@/utilities/utils";
 import { watch } from "@/utilities/watch";
 
 const names = new Map(
@@ -30,7 +30,7 @@ const names = new Map(
     ].map(v => [v.toLowerCase(), v])
 );
 
-export default function({ directive, entangle, evaluateLater, findClosest, mapAttributes, mutateDom, prefixed }) {
+export default function({ directive, entangle, evaluateLater, mapAttributes, mutateDom, prefixed }) {
     mapAttributes(({ name, value }) => ({
         name: name.replace(/^&/, () => prefixed("bound:")),
         value
@@ -38,7 +38,7 @@ export default function({ directive, entangle, evaluateLater, findClosest, mapAt
 
     directive("bound", (el, { expression, value, modifiers }, { effect, cleanup }) => {
         if (!value) {
-            error("x-bound directive ???");
+            warn("x-bound directive expects the presence of a bound property name");
             return;
         }
 
@@ -111,11 +111,16 @@ export default function({ directive, entangle, evaluateLater, findClosest, mapAt
                              modifiers.includes("out") ? "out" : "inout";
 
             const sourceEl = expression === value
-                ? findClosest(el.parentNode, node => node._x_dataStack)
+                ? closest(el.parentNode, node => node._x_dataStack)
                 : el;
 
-            if (!el._x_dataStack || !sourceEl) {
-                error("x-bound directive ???");
+            if (!el._x_dataStack) {
+                warn("x-bound directive requires the presence of the x-data directive to bind component properties");
+                return;
+            }
+
+            if (!sourceEl) {
+                warn(`x-bound directive cannot find the parent scope where the '${ value }' property is defined`);
                 return;
             }
 

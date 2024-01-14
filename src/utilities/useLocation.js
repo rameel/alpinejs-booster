@@ -1,8 +1,10 @@
-import { listen } from "@/utilities/utils";
+import { assert, listen } from "@/utilities/utils";
 
 let data;
 
 export function useLocation() {
+    assert(Alpine, "Alpine is not defined");
+
     if (!data) {
         data = Alpine.reactive({
             hash: "",

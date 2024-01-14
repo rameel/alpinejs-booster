@@ -1,8 +1,11 @@
+import { assert } from "@/utilities/utils";
+
 export function watch(getValue, callback, options = null) {
+    assert(Alpine, "Alpine is not defined");
+
     const {
         effect,
-        release,
-        onElRemoved
+        release
     } = Alpine;
 
     let newValue;
@@ -18,18 +21,15 @@ export function watch(getValue, callback, options = null) {
         }
 
         if (initialized || (options?.immediate ?? true)) {
-            // To prevent the watcher from detecting its own dependencies
-            queueMicrotask(() => {
+            // Prevent the watcher from detecting its own dependencies
+            setTimeout(() => {
                 callback(newValue, oldValue);
                 oldValue = newValue;
-            });
+            }, 0);
         }
 
         initialized = true;
     });
 
-    const dispose = () => release(handle);
-    options?.el && onElRemoved(options.el, dispose);
-
-    return dispose;
+    return () => release(handle);
 }

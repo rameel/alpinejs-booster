@@ -1,16 +1,16 @@
-import { createHistory } from "@/plugins/router/helpers/history";
-import { error, isNullish, isTemplate, listen } from "@/utilities/utils";
+import { createHistory } from "@/plugins/router/history";
 import { createGetter } from "@/utilities/evaluator";
+import { asArray, closest, isNullish, isTemplate, listen, warn } from "@/utilities/utils";
 import { watch } from "@/utilities/watch";
 
-export default function({ directive, findClosest: closest, magic, reactive }) {
+export default function({ directive, magic, reactive }) {
     directive("router", (el, { expression, value }, { cleanup, effect, evaluate, evaluateLater }) => {
         value || (value = "html5");
 
         const router = closest(el, node => node._x_router)?._x_router;
 
         if (isNullish(router) && (value === "outlet" || value === "link")) {
-            error(`no x-router directive found`);
+            warn(`no x-router directive found`);
             return;
         }
 
@@ -29,6 +29,11 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
         }
 
         function processRouter() {
+            if (isTemplate(el)) {
+                warn("x-router cannot be used on a 'template' tag");
+                return;
+            }
+
             const values = reactive({
                 pattern: "",
                 path: "",
@@ -50,7 +55,7 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
                         const params = route.match(path);
                         if (params) {
                             const context = { router, route, params, path };
-                            if (route.handler && await route.handler(context) !== false) {
+                            if (await route.handler(context) !== false) {
                                 return context;
                             }
                         }
@@ -58,6 +63,7 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
                 },
                 navigate(path, replace = false) {
                     api.navigate(path, replace);
+                    return true;
                 }
             };
 
@@ -94,14 +100,20 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
             }
 
             function clear() {
-                router.active?.nodes?.forEach(n => n.remove());
-                router.active = null;
+                if (router.active) {
+                    router.active.nodes?.forEach(n => n.remove());
+                    router.active.nodes = null;
+                    router.active = null;
+                }
             }
 
             const dispose = watch(() => api.path, async path => {
                 const result = await router.match(path);
-                if (result && path === api.path) {
-                    activate(result.route, result.path, result.params);
+
+                if (result) {
+                    if (path === api.path) {
+                        activate(result.route, result.path, result.params);
+                    }
                 }
                 else {
                     clear();
@@ -131,27 +143,22 @@ export default function({ directive, findClosest: closest, magic, reactive }) {
             });
 
             if (expression) {
-                const active = createGetter(evaluateLater, "$active");
-                let classlist = evaluate(expression);
-                Array.isArray(classlist) || (classlist = [classlist]);
+                const isActive = createGetter(evaluateLater, "$active");
+                const list = asArray(evaluate(expression));
 
                 effect(() => {
-                    if (active()) {
-                        el.classList.add(...classlist);
-                    }
-                    else {
-                        el.classList.remove(...classlist);
-                    }
+                    const active = isActive();
+                    list.forEach(cls => el.classList.toggle(cls, active));
                 });
 
-                cleanup(() => el.classList.remove(...classlist));
+                cleanup(() => el.classList.remove(...list));
             }
 
             cleanup(unsubscribe);
         }
 
         function processOutlet() {
-            router.outlet && error("x-router:outlet already specified", router.outlet);
+            router.outlet && warn("x-router:outlet already specified", router.outlet);
             router.outlet || (router.outlet = el);
             cleanup(() => router.outlet = null);
         }

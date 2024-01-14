@@ -1,5 +1,5 @@
 import { assert, describe, expect, test } from "vitest";
-import { RoutePattern } from "@/plugins/router/helpers/RoutePattern";
+import { RoutePattern } from "@/plugins/router/RoutePattern";
 
 describe("RoutePattern", () => {
     test("pattern: ignore consecutive slashes", () => {
