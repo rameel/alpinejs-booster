@@ -1,5 +1,5 @@
 const key = Symbol();
-let observable = null;
+let observable;
 
 export function observeResize(el, listener) {
     observable ??= new ResizeObserver(entries => {
