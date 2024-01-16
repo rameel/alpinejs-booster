@@ -21,7 +21,7 @@ export function isElement(el) {
 }
 
 export function isFunction(value) {
-    return typeof(value) === "function";
+    return typeof value === "function";
 }
 
 export function asArray(value) {

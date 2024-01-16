@@ -1,6 +1,6 @@
 import { createGetter, createSetter } from "@/utilities/evaluator";
 import { observeResize } from "@/utilities/observeResize";
-import { clone, closest, listen, warn } from "@/utilities/utils";
+import { asArray, clone, closest, listen, warn } from "@/utilities/utils";
 import { watch } from "@/utilities/watch";
 
 const names = new Map(
@@ -258,7 +258,7 @@ function collectGroupValues(el, values) {
         return el.value;
     }
 
-    Array.isArray(values) || (values = [values]);
+    values = asArray(values);
     const index = values.indexOf(el.value);
 
     if (el.checked) {

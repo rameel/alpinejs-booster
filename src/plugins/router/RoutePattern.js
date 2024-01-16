@@ -1,4 +1,4 @@
-import { isNullish } from "@/utilities/utils";
+import { asArray, isNullish } from "@/utilities/utils";
 
 const defaultConstraints = {
     "regex"(value) {
@@ -168,7 +168,7 @@ export class RoutePattern {
                     }
 
                     if (part.catchAll) {
-                        Array.isArray(value) || (value = [value]);
+                        value = asArray(value);
                         parts.push(...value.map(v => encodeURIComponent(v)).join("/"));
                     }
                     else {
