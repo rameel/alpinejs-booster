@@ -16,10 +16,9 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
             }
 
             nodes = [...el.content.cloneNode(true).childNodes];
-            nodes.forEach(node => {
-                isElement(node) && addScopeToNode(node, {}, el);
-
-                mutateDom(() => {
+            mutateDom(() => {
+                nodes.forEach(node => {
+                    isElement(node) && addScopeToNode(node, {}, el);
                     el.parentElement.insertBefore(node, el);
                     isElement(node) && initTree(node);
                 });
