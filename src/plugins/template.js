@@ -8,7 +8,7 @@ export default function(alpine) {
         }
 
         const tpl = document.getElementById(expression);
-        if (!tpl) {
+        if (__DEV && !tpl) {
             warn(`Template #'${ expression }' not found`);
             return;
         }
