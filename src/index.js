@@ -6,6 +6,7 @@ import { hotkey } from "@/plugins";
 import { match } from "@/plugins";
 import { router } from "@/plugins";
 import { template } from "@/plugins";
+import { utilities } from "@/plugins";
 import { when } from "@/plugins";
 
 document.addEventListener("alpine:init", () => {
@@ -18,6 +19,7 @@ document.addEventListener("alpine:init", () => {
         match,
         router,
         template,
+        utilities,
         when
     ]);
 });
