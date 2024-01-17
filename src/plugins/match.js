@@ -2,9 +2,9 @@ import { createGetter } from "@/utilities/evaluator";
 import { isElement, isTemplate, warn } from "@/utilities/utils";
 
 export default function({ directive, addScopeToNode, mutateDom, initTree }) {
-    directive("switch", (el, { }, { cleanup, effect, evaluateLater }) => {
+    directive("match", (el, { }, { cleanup, effect, evaluateLater }) => {
         if (!isTemplate(el)) {
-            warn("x-switch can only be used on a 'template' tag");
+            warn("x-match can only be used on a 'template' tag");
             return;
         }
 
