@@ -33,7 +33,7 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
         }
 
         function activate(branch) {
-            if (branch.nodes?.length) {
+            if (branch.nodes) {
                 return;
             }
 
@@ -53,7 +53,7 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
         }
 
         function clear() {
-            const branch = branches.find(b => b.nodes?.length);
+            const branch = branches.find(b => b.nodes);
             if (branch) {
                 branch.nodes.forEach(n => n.remove());
                 branch.nodes = null;

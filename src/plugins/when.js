@@ -11,7 +11,7 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
         let nodes;
 
         function activate() {
-            if (nodes?.length) {
+            if (nodes) {
                 return;
             }
 
@@ -26,10 +26,8 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
         }
 
         function clear() {
-            if (nodes?.length) {
-                nodes.forEach(node => node.remove());
-                nodes = null;
-            }
+            nodes && nodes.forEach(node => node.remove());
+            nodes = null;
         }
 
         const getValue = createGetter(evaluateLater, expression);
