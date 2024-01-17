@@ -25,7 +25,7 @@ export default function(alpine) {
         // for cloned elements
         queueMicrotask(() => {
             el.innerHTML = "";
-            el.appendChild(tpl.content.cloneNode(true));
+            el.append(tpl.content.cloneNode(true));
         });
     });
 }
