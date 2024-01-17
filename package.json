@@ -34,8 +34,8 @@
     "test:dev": "vitest",
     "coverage": "vitest run --coverage"
   },
-  "dependencies": {
-    "alpinejs": "^3.13.3"
+  "peerDependencies": {
+    "alpinejs": "^3.12.1"
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^5.1.0",
