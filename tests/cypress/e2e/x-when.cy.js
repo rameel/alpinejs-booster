@@ -51,18 +51,18 @@ test("x-when: scope propogation", html`
 });
 
 test("x-when: x-for", html`
-    <main x-data="{ items: [{ id: 1, title: 'item-3' }, { id: 2, title: 'item-1' }, { id: 3, title: 'item-2' }] }">
+    <main x-data="{ items: [{ id: 1, title: 'item-1' }, { id: 2, title: 'item-2' }, { id: 3, title: 'item-3' }] }">
         <div>
-            <button @click="items.sort((a, b) => a.title.localeCompare(b.title))">Sort by title</button>
+            <button @click="items.reverse()">Reverse</button>
         </div>
         <template x-for="item in items">
             <template x-when="item.id > 0">[<span x-text="item.id"></span>:<span x-text="item.title"></span>]</template>
         </template>
     </main>`, ({ get }) => {
 
-    get("main").should("contain.text", "[1:item-3][2:item-1][3:item-2]");
+    get("main").should("contain.text", "[1:item-1][2:item-2][3:item-3]");
 
     get("button").click();
 
-    get("main").should("contain.text", "[2:item-1][3:item-2][1:item-3]");
+    get("main").should("contain.text", "[3:item-3][2:item-2][1:item-1]");
 });
