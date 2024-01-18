@@ -30,7 +30,9 @@
     "dev": "rollup -c --watch",
     "build": "npm run clean && cross-env NODE_ENV=production rollup -c",
     "clean": "rimraf dist coverage",
-    "test": "vitest run",
+    "cypress": "npm run build && cypress open",
+    "test": "npm run build && vitest run && cypress run",
+    "test:cypress": "npm run build && cypress run",
     "test:dev": "vitest",
     "coverage": "vitest run --coverage"
   },
