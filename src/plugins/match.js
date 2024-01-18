@@ -1,7 +1,7 @@
 import { createGetter } from "@/utilities/evaluator";
 import { isElement, isTemplate, warn } from "@/utilities/utils";
 
-export default function({ directive, addScopeToNode, mutateDom, initTree }) {
+export default function({ addScopeToNode, directive, initTree, mutateDom }) {
     directive("match", (el, { }, { cleanup, effect, evaluateLater }) => {
         if (!isTemplate(el)) {
             warn("x-match can only be used on a 'template' tag");
