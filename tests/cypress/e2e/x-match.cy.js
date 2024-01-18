@@ -53,3 +53,18 @@ test("x-match: scope propogation", html`
 
     get("main").should("contain.text", "[1][2][3][Other]");
 });
+
+test("x-match: non-template element on x-case arms", html`
+    <main x-data="{ items: [1,2,3,4] }">
+        <template x-for="item in items">
+            <template x-match>
+                <span x-case="item == 1">[<span x-text="item"></span>]</span>
+                <span x-case="item == 2">[<span x-text="item"></span>]</span>
+                <span x-case="item == 3">[<span x-text="item"></span>]</span>
+                <span x-default>[<span>Other</span>]</span>
+            </template>
+        </template>
+    </main>`, ({ get }) => {
+
+    get("main").should("contain.text", "[1][2][3][Other]");
+});
