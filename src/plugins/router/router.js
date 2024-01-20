@@ -7,7 +7,7 @@ export default function({ directive, magic, reactive }) {
     directive("router", (el, { expression, value }, { cleanup, effect, evaluate, evaluateLater }) => {
         value || (value = "html5");
 
-        const router = closest(el, node => node._x_router)?._x_router;
+        const router = closest(el, node => node._b_router)?._b_router;
 
         if (isNullish(router) && (value === "outlet" || value === "link")) {
             warn(`no x-router directive found`);
@@ -67,7 +67,7 @@ export default function({ directive, magic, reactive }) {
                 }
             };
 
-            el._x_router = router;
+            el._b_router = router;
 
             function activate(route, path, params) {
                 if (route.nodes?.length && values.path === path) {
@@ -101,7 +101,9 @@ export default function({ directive, magic, reactive }) {
 
             function clear() {
                 if (router.active) {
-                    router.active.nodes?.forEach(n => n.remove());
+                    for (let n of router.active.nodes ?? []) {
+                        n.remove();
+                    }
                     router.active.nodes = null;
                     router.active = null;
                 }
@@ -148,7 +150,9 @@ export default function({ directive, magic, reactive }) {
 
                 effect(() => {
                     const active = isActive();
-                    list.forEach(cls => el.classList.toggle(cls, active));
+                    for (let name of list) {
+                        el.classList.toggle(cls, active);
+                    }
                 });
 
                 cleanup(() => el.classList.remove(...list));
@@ -164,10 +168,10 @@ export default function({ directive, magic, reactive }) {
         }
     });
 
-    magic("router", el => closest(el, n => n._x_router)?._x_router);
+    magic("router", el => closest(el, n => n._b_router)?._b_router);
 
     magic("active", el => {
-        const router = closest(el, node => node._x_router)?._x_router;
+        const router = closest(el, node => node._b_router)?._b_router;
         if (isNullish(router)) {
             warn("No x-router directive found");
             return;
