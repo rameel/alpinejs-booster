@@ -1,4 +1,5 @@
-import { isElement, isTemplate, warn } from "@/utilities/utils";
+import { anchorBlock } from "@/utilities/anchorBlock";
+import { isTemplate, warn } from "@/utilities/utils";
 
 export default function({ addScopeToNode, directive, initTree, mutateDom }) {
     directive("fragment", (el, {}, { cleanup }) => {
@@ -7,19 +8,6 @@ export default function({ addScopeToNode, directive, initTree, mutateDom }) {
             return;
         }
 
-        let nodes = [...el.content.cloneNode(true).childNodes];
-
-        mutateDom(() => {
-            nodes.forEach(node => {
-                isElement(node) && addScopeToNode(node, {}, el);
-                el.parentElement.insertBefore(node, el);
-                isElement(node) && initTree(node);
-            });
-        });
-
-        cleanup(() => {
-            nodes.forEach(node => node.remove());
-            nodes = null;
-        });
+        anchorBlock(el, el, { addScopeToNode, cleanup, initTree, mutateDom });
     });
 }

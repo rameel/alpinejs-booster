@@ -30,3 +30,37 @@ test("x-fragment: scope propogation", html`
 
     get("main").should("contain.text", "Before [TITLE] After");
 });
+
+test("x-fragment: x-for", html`
+    <main x-data="{ items: [{ id: 1, title: 'item-1' }, { id: 2, title: 'item-2' }, { id: 3, title: 'item-3' }] }">
+        <div>
+            <button @click="items.reverse()">Reverse</button>
+        </div>
+        <template x-for="item in items">
+            <template x-fragment>[<span x-text="item.id"></span>:<span x-text="item.title"></span>]</template>
+        </template>
+    </main>`, ({ get }) => {
+
+    get("main").should("contain.text", "[1:item-1][2:item-2][3:item-3]");
+
+    get("button").click();
+
+    get("main").should("contain.text", "[3:item-3][2:item-2][1:item-1]");
+});
+
+test("x-fragment: x-for with key", html`
+    <main x-data="{ items: [{ id: 1, title: 'item-1' }, { id: 2, title: 'item-2' }, { id: 3, title: 'item-3' }] }">
+        <div>
+            <button @click="items.reverse()">Reverse</button>
+        </div>
+        <template x-for="item in items" :key="item.id">
+            <template x-fragment>[<span x-text="item.id"></span>:<span x-text="item.title"></span>]</template>
+        </template>
+    </main>`, ({ get }) => {
+
+    get("main").should("contain.text", "[1:item-1][2:item-2][3:item-3]");
+
+    get("button").click();
+
+    get("main").should("contain.text", "[3:item-3][2:item-2][1:item-1]");
+});

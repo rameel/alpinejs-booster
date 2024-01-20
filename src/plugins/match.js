@@ -1,5 +1,6 @@
+import { anchorBlock } from "@/utilities/anchorBlock";
 import { createGetter } from "@/utilities/evaluator";
-import { isElement, isTemplate, warn } from "@/utilities/utils";
+import { isTemplate, warn } from "@/utilities/utils";
 
 export default function({ addScopeToNode, directive, initTree, mutateDom }) {
     directive("match", (el, { }, { cleanup, effect, evaluateLater }) => {
@@ -33,31 +34,19 @@ export default function({ addScopeToNode, directive, initTree, mutateDom }) {
         }
 
         function activate(branch) {
-            if (branch.nodes) {
-                return;
-            }
-
-            clear();
-
-            branch.nodes = isTemplate(branch.el)
-                ? [...branch.el.content.cloneNode(true).childNodes]
-                : [branch.el.cloneNode(true)];
-
-            mutateDom(() => {
-                branch.nodes.forEach(node => {
-                    isElement(node) && addScopeToNode(node, {}, el);
-                    el.parentElement.insertBefore(node, el);
-                    isElement(node) && initTree(node);
+            if (el._b_block?.template !== branch.el) {
+                clear();
+                anchorBlock(el, branch.el, {
+                    addScopeToNode,
+                    cleanup,
+                    initTree,
+                    mutateDom
                 });
-            });
+            }
         }
 
         function clear() {
-            const branch = branches.find(b => b.nodes);
-            if (branch) {
-                branch.nodes.forEach(n => n.remove());
-                branch.nodes = null;
-            }
+            el._b_block?.delete();
         }
 
         effect(() => {
@@ -69,14 +58,9 @@ export default function({ addScopeToNode, directive, initTree, mutateDom }) {
                 }
             }
 
-            if (active) {
-                activate(active);
-            }
-            else {
-                clear();
-            }
+            active
+                ? activate(active)
+                : clear();
         });
-
-        cleanup(clear);
     });
 }

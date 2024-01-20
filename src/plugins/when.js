@@ -1,5 +1,6 @@
+import { anchorBlock } from "@/utilities/anchorBlock";
 import { createGetter } from "@/utilities/evaluator";
-import { isElement, isTemplate, warn } from "@/utilities/utils";
+import { isTemplate, warn } from "@/utilities/utils";
 
 export default function({ addScopeToNode, directive, initTree, mutateDom }) {
     directive("when", (el, { expression }, { cleanup, effect, evaluateLater }) => {
@@ -8,39 +9,10 @@ export default function({ addScopeToNode, directive, initTree, mutateDom }) {
             return;
         }
 
-        let nodes;
+        const activate = () => anchorBlock(el, el, { addScopeToNode, cleanup, initTree, mutateDom });
+        const clear    = () => el._b_block?.delete();
 
-        function activate() {
-            if (nodes) {
-                return;
-            }
-
-            nodes = [...el.content.cloneNode(true).childNodes];
-            mutateDom(() => {
-                nodes.forEach(node => {
-                    isElement(node) && addScopeToNode(node, {}, el);
-                    el.parentElement.insertBefore(node, el);
-                    isElement(node) && initTree(node);
-                });
-            });
-        }
-
-        function clear() {
-            nodes && nodes.forEach(node => node.remove());
-            nodes = null;
-        }
-
-        const getValue = createGetter(evaluateLater, expression);
-
-        effect(() => {
-            if (getValue()) {
-                activate();
-            }
-            else {
-                clear();
-            }
-        });
-
-        cleanup(clear);
+        const get = createGetter(evaluateLater, expression);
+        effect(() => get() ? activate() : clear());
     });
 }
