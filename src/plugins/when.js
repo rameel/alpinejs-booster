@@ -10,7 +10,7 @@ export default function({ addScopeToNode, directive, initTree, mutateDom }) {
         }
 
         const activate = () => anchorBlock(el, el, { addScopeToNode, cleanup, initTree, mutateDom });
-        const clear    = () => el._b_block?.delete();
+        const clear = () => el._b_block?.delete();
 
         const get = createGetter(evaluateLater, expression);
         effect(() => get() ? activate() : clear());

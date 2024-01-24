@@ -7,7 +7,7 @@ export function anchorBlock(el, template, { addScopeToNode, cleanup, initTree, m
 
     document.body._b_linker || initialize();
 
-    let nodes =  isTemplate(template)
+    let nodes = isTemplate(template)
         ? [...template.content.cloneNode(true).childNodes]
         : [template.cloneNode(true)];
 
