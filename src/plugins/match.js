@@ -12,7 +12,7 @@ export default function({ addScopeToNode, directive, initTree, mutateDom }) {
         const branches = [];
         const hasDefault = () => branches.some(b => b.default);
 
-        for (let node = el.content.firstElementChild; node; node = node.nextElementSibling) {
+        for (let node of el.content.children) {
             const expr = node.getAttribute("x-case");
             if (expr !== null) {
                 if (__DEV && hasDefault()) {
