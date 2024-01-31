@@ -156,7 +156,7 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
                     return true;
 
                 case "SELECT":
-                    effect(() => applySelectValues(el, getValue() ?? []));
+                    effect(() => applySelectValues(el, asArray(getValue() ?? [])));
                     cleanup(listen(el, "change", () => setValue(collectSelectedValues(el))));
                     return true;
             }
