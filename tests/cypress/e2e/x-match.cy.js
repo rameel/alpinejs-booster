@@ -1,7 +1,7 @@
 import { html, test } from "../utils";
 
 test("x-match", html`
-    <main x-data="{ value: 1 }">
+    <div x-data="{ value: 1 }">
         <button @click="value++">Increment</button>
 
         <template x-match>
@@ -10,22 +10,22 @@ test("x-match", html`
             <template x-case="value == 3">3</template>
             <template x-default>Other</template>
         </template>
-    </main>`, ({ get }) => {
+    </div>`, ({ get }) => {
 
-    get("main").should("contain.text", "1");
-
-    get("button").click();
-    get("main").should("contain.text", "2");
+    get("div").should("contain.text", "1");
 
     get("button").click();
-    get("main").should("contain.text", "3");
+    get("div").should("contain.text", "2");
 
     get("button").click();
-    get("main").should("contain.text", "Other");
+    get("div").should("contain.text", "3");
+
+    get("button").click();
+    get("div").should("contain.text", "Other");
 });
 
 test("x-match: cleanup", html`
-    <main x-data="{ value: 1 }">
+    <div x-data="{ value: 1 }">
         <button @click="value++">Increment</button>
 
         <template x-match>
@@ -33,30 +33,30 @@ test("x-match: cleanup", html`
             <template x-case="value == 2">2</template>
             <template x-case="value == 3">3</template>
         </template>
-    </main>`, ({ get }) => {
+    </div>`, ({ get }) => {
 
-    get("main").should("contain.text", "1");
-    get("main").should("not.contain.text", "2");
-    get("main").should("not.contain.text", "3");
-
-    get("button").click();
-    get("main").should("contain.text", "2");
-    get("main").should("not.contain.text", "1");
-    get("main").should("not.contain.text", "3");
+    get("div").should("contain.text", "1");
+    get("div").should("not.contain.text", "2");
+    get("div").should("not.contain.text", "3");
 
     get("button").click();
-    get("main").should("contain.text", "3");
-    get("main").should("not.contain.text", "1");
-    get("main").should("not.contain.text", "2");
+    get("div").should("contain.text", "2");
+    get("div").should("not.contain.text", "1");
+    get("div").should("not.contain.text", "3");
 
     get("button").click();
-    get("main").should("not.contain.text", "1");
-    get("main").should("not.contain.text", "2");
-    get("main").should("not.contain.text", "3");
+    get("div").should("contain.text", "3");
+    get("div").should("not.contain.text", "1");
+    get("div").should("not.contain.text", "2");
+
+    get("button").click();
+    get("div").should("not.contain.text", "1");
+    get("div").should("not.contain.text", "2");
+    get("div").should("not.contain.text", "3");
 });
 
 test("x-match: scope propogation", html`
-    <main x-data="{ items: [1,2,3,4] }">
+    <div x-data="{ items: [1,2,3,4] }">
         <template x-for="item in items">
             <template x-match>
                 <template x-case="item == 1">[<span x-text="item"></span>]</template>
@@ -65,13 +65,13 @@ test("x-match: scope propogation", html`
                 <template x-default>[<span>Other</span>]</template>
             </template>
         </template>
-    </main>`, ({ get }) => {
+    </div>`, ({ get }) => {
 
-    get("main").should("contain.text", "[1][2][3][Other]");
+    get("div").should("contain.text", "[1][2][3][Other]");
 });
 
 test("x-match: non-template element on x-case arms", html`
-    <main x-data="{ items: [1,2,3,4] }">
+    <div x-data="{ items: [1,2,3,4] }">
         <template x-for="item in items">
             <template x-match>
                 <span x-case="item == 1">[<span x-text="item"></span>]</span>
@@ -80,13 +80,13 @@ test("x-match: non-template element on x-case arms", html`
                 <span x-default>[<span>Other</span>]</span>
             </template>
         </template>
-    </main>`, ({ get }) => {
+    </div>`, ({ get }) => {
 
-    get("main").should("contain.text", "[1][2][3][Other]");
+    get("div").should("contain.text", "[1][2][3][Other]");
 });
 
 test("x-match: x-for", html`
-    <main x-data="{ items: [{ id: 1, title: 'item-1' }, { id: 2, title: 'item-2' }, { id: 3, title: 'item-3' }] }">
+    <div x-data="{ items: [{ id: 1, title: 'item-1' }, { id: 2, title: 'item-2' }, { id: 3, title: 'item-3' }] }">
         <div>
             <button @click="items.reverse()">Reverse</button>
         </div>
@@ -97,17 +97,17 @@ test("x-match: x-for", html`
                 <template x-default>[<span x-format>{{ item.id }}:{{ item.title }}</span>]</template>
             </template>
         </template>
-    </main>`, ({ get }) => {
+    </div>`, ({ get }) => {
 
-    get("main").should("contain.text", "[1:item-1][2:item-2][3:item-3]");
+    get("div").should("contain.text", "[1:item-1][2:item-2][3:item-3]");
 
     get("button").click();
 
-    get("main").should("contain.text", "[3:item-3][2:item-2][1:item-1]");
+    get("div").should("contain.text", "[3:item-3][2:item-2][1:item-1]");
 });
 
 test("x-match: x-for with key", html`
-    <main x-data="{ items: [{ id: 1, title: 'item-1' }, { id: 2, title: 'item-2' }, { id: 3, title: 'item-3' }] }">
+    <div x-data="{ items: [{ id: 1, title: 'item-1' }, { id: 2, title: 'item-2' }, { id: 3, title: 'item-3' }] }">
         <div>
             <button @click="items.reverse()">Reverse</button>
         </div>
@@ -118,11 +118,11 @@ test("x-match: x-for with key", html`
                 <template x-default>[<span x-format>{{ item.id }}:{{ item.title }}</span>]</template>
             </template>
         </template>
-    </main>`, ({ get }) => {
+    </div>`, ({ get }) => {
 
-    get("main").should("contain.text", "[1:item-1][2:item-2][3:item-3]");
+    get("div").should("contain.text", "[1:item-1][2:item-2][3:item-3]");
 
     get("button").click();
 
-    get("main").should("contain.text", "[3:item-3][2:item-2][1:item-1]");
+    get("div").should("contain.text", "[3:item-3][2:item-2][1:item-1]");
 });

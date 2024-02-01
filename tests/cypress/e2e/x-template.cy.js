@@ -6,9 +6,9 @@ test("x-template", html`
             <span x-format>{{ value }}</span>
         </template>
     </template>
-    <main x-data="{ value: 'Foo', show: true }">
+    <div x-data="{ value: 'Foo', show: true }">
         <div x-template="tpl"></div>
-    </main>`, ({ get }) => {
+    </div>`, ({ get }) => {
 
-    get("main span").should("contain.text", "Foo");
+    get("span").should("contain.text", "Foo");
 });

@@ -6,9 +6,9 @@
     <title></title>
 </head>
 <body>
-    <div id="root"></div>
+    <main id="root"></main>
     <script>
-        let root = document.getElementById("root");
+        const root = document.getElementById("root");
         root.evaluate = () => {
             root.querySelectorAll("script").forEach(el => eval(el.innerHTML));
 
