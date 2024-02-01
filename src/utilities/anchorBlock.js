@@ -5,7 +5,7 @@ export function anchorBlock(el, template, { addScopeToNode, cleanup, initTree, m
         return;
     }
 
-    document.body._b_linker || initialize();
+    initialize();
 
     let nodes = isTemplate(template)
         ? [...template.content.cloneNode(true).childNodes]
@@ -41,14 +41,16 @@ export function anchorBlock(el, template, { addScopeToNode, cleanup, initTree, m
 }
 
 function initialize() {
-    const observer = new MutationObserver(mutations => {
-        for (let mutation of mutations) {
-            for (let node of mutation.addedNodes) {
-                node._b_block?.update();
+    document.body._b_block ??= (() => {
+        const observer = new MutationObserver(mutations => {
+            for (let mutation of mutations) {
+                for (let node of mutation.addedNodes) {
+                    node._b_block?.update();
+                }
             }
-        }
-    });
+        });
 
-    observer.observe(document.body, { subtree: true, childList: true });
-    document.body._b_linker = observer;
+        observer.observe(document.body, { childList: true, subtree: true });
+        return observer;
+    })();
 }
