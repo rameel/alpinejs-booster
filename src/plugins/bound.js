@@ -233,7 +233,7 @@ function applySelectValues(el, values) {
 
 function collectSelectedValues(el) {
     if (el.multiple) {
-        return [...el.selectedOptions.map(o => o.value || o.text)];
+        return [...el.selectedOptions].map(o => o.value || o.text);
     }
 
     return el.value;
