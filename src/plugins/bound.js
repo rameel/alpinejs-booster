@@ -55,7 +55,14 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
         const setValue = createSetter(evaluateLater, el, expression);
 
         const updateProperty = () => el[property] !== getValue() && mutateDom(() => el[property] = getValue());
-        const updateVariable = () => setValue(el[property]);
+        const updateVariable = () => {
+            if (isNumberlike(el)) {
+                setValue(toNumber(el[property]));
+            }
+            else {
+                setValue(el[property]);
+            }
+        }
 
         const tagName = el.tagName.toUpperCase();
 
@@ -219,6 +226,14 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
             }
         }
     });
+}
+
+function isNumberlike(el) {
+    return el.type === "number" || el.type === "range";
+}
+
+function toNumber(value) {
+    return value === "" ? null : +value;
 }
 
 function isCheckable(el) {
