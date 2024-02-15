@@ -237,7 +237,7 @@ function toNumber(value) {
 }
 
 function isCheckable(el) {
-    return el.tagName === "INPUT" && (el.type === "checkbox" || el.type === "radio");
+    return el.type === "checkbox" || el.type === "radio";
 }
 
 function applySelectValues(el, values) {
@@ -255,17 +255,9 @@ function collectSelectedValues(el) {
 }
 
 function applyGroupValues(el, values) {
-    switch (el.type) {
-        case "checkbox":
-            el.checked = values.indexOf(el.value) >= 0;
-            break;
-
-        case "radio":
-            el.checked = Array.isArray(values)
-                ? values.indexOf(el.value) >= 0
-                : el.value === values;
-            break;
-    }
+    el.checked = Array.isArray(values)
+        ? values.indexOf(el.value) >= 0
+        : el.value === values;
 }
 
 function collectGroupValues(el, values) {
