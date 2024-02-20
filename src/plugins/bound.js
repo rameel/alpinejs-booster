@@ -110,8 +110,9 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
         }
 
         if (!processed) {
-            const modifier = hasModifier(modifiers, "in")  ? "in"  :
-                             hasModifier(modifiers, "out") ? "out" : "inout";
+            const modifier =
+                hasModifier(modifiers, "in")  ? "in"  :
+                hasModifier(modifiers, "out") ? "out" : "inout";
 
             const sourceEl = expression === value
                 ? closest(el.parentNode, node => node._x_dataStack)
