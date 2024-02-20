@@ -223,6 +223,10 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
 
         function processDetails() {
             if (tagName === "DETAILS") {
+                // if the value of the bound property is "null" or "undefined",
+                // we initialize it with the value from the element.
+                isNullish(getValue()) && updateVariable();
+
                 effect(updateProperty);
                 cleanup(listen(el, "toggle", updateVariable));
                 return true;

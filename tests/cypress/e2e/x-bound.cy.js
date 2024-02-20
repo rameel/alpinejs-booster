@@ -246,3 +246,53 @@ group("x-bound: contenteditable", () => {
         get("span").should("contain.text", "Hello!")
     });
 });
+
+group("x-bound: details", () => {
+    test("details", html`
+        <div x-data="{ open: true }">
+            <details &open>
+                <summary>Header</summary>
+                Hello World!
+            </details>
+            <button @click="open = false">Toggle</button>
+            <span x-format>{{ open }}</span>
+        </div>`, ({ get }) => {
+
+        get("details").should("have.attr", "open", "open");
+        get("span").should("have.text", "true");
+
+        get("button").click();
+        get("details").should("not.have.attr", "open");
+        get("span").should("have.text", "false");
+
+        get("details").click();
+        get("details").should("have.attr", "open", "open");
+        get("span").should("have.text", "true");
+    });
+
+    test("initiaize from element when property is null", html`
+        <div x-data="{ open: null }">
+            <details &open open>
+                <summary>Header</summary>
+                Hello World!
+            </details>
+            <span x-format>{{ open }}</span>
+        </div>`, ({ get }) => {
+
+        get("details").should("have.attr", "open", "open");
+        get("span").should("have.text", "true");
+    });
+
+    test("initiaize from element when property is undefined", html`
+        <div x-data="{ open: undefined }">
+            <details &open open>
+                <summary>Header</summary>
+                Hello World!
+            </details>
+            <span x-format>{{ open }}</span>
+        </div>`, ({ get }) => {
+
+        get("details").should("have.attr", "open", "open");
+        get("span").should("have.text", "true");
+    });
+});
