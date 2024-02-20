@@ -33,7 +33,7 @@ export default function({ addScopeToNode, directive, initTree, mutateDom }) {
             }
         }
 
-        function activate(branch) {
+        const activate = branch => {
             if (el._b_block?.template !== branch.el) {
                 clear();
                 anchorBlock(el, branch.el, {
@@ -45,9 +45,7 @@ export default function({ addScopeToNode, directive, initTree, mutateDom }) {
             }
         }
 
-        function clear() {
-            el._b_block?.delete();
-        }
+        const clear = () => el._b_block?.delete();
 
         effect(() => {
             let active;

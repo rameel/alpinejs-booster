@@ -50,7 +50,7 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
 
         // if the expression is omitted, then we assume it corresponds
         // to the bound property name, allowing us to write expressions more concisely,
-        // and write &value instead of &value="value".
+        // and write &value instead of &value="value"
         expression ||= property;
 
         const getValue = createGetter(evaluateLater, el, expression);

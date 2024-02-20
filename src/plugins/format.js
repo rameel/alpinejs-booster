@@ -21,18 +21,11 @@ export default function({ directive, mutateDom }) {
 
         function update(callback) {
             if (isOnce) {
-                mutateDom(() => {
-                    callback();
-                });
-
+                mutateDom(() => callback());
                 cache.clear();
             }
             else {
-                effect(() => {
-                    mutateDom(() => {
-                        callback();
-                    });
-                });
+                effect(() => mutateDom(() => callback()));
             }
         }
 
@@ -68,9 +61,8 @@ export default function({ directive, mutateDom }) {
                     }
                 }
 
-                mutateDom(() => {
-                    node.parentElement.replaceChild(fragment, node);
-                })
+                mutateDom(() =>
+                    node.parentElement.replaceChild(fragment, node));
             }
         }
 
