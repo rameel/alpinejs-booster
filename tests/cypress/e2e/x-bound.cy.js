@@ -169,3 +169,72 @@ test("x-bound: select multiple (primitive value)", html`
     get("select").invoke("val").should("deep.equal", ["Two", "Three"]);
     get("span").should("have.text", `["Two","Three"]`);
 });
+
+test("x-bound: innerHTML", html`
+    <div x-data="{ innerHTML: '<h1>Sample</h1>' }">
+        <pre contenteditable &innerHTML></pre>
+        <button @click="innerHTML='Hello!'">Click</button>
+        <span x-format>{{ innerHTML }}</pre>
+    </div>`, ({ get }) => {
+
+    get("span").should("contain.text", "<h1>Sample</h1>")
+    get("button").click();
+    get("span").should("contain.text", "Hello!")
+    get("pre").clear().type("Hello World!");
+    get("span").should("contain.text", "Hello World!")
+});
+
+test("x-bound: innerHTML (initliaze from element when property is null)", html`
+    <div x-data="{ innerHTML: null }">
+        <pre contenteditable &innerHTML>Hello!</pre>
+        <span x-format>{{ innerHTML }}</pre>
+    </div>`, ({ get }) => {
+
+    get("span").should("contain.text", "Hello!")
+});
+
+test("x-bound: innerText", html`
+    <div x-data="{ innerText: 'Sample' }">
+        <pre contenteditable &innerText></pre>
+        <button @click="innerText='Hello!'">Click</button>
+        <span x-format>{{ innerText }}</pre>
+    </div>`, ({ get }) => {
+
+    get("span").should("contain.text", "Sample")
+    get("button").click();
+    get("span").should("contain.text", "Hello!")
+    get("pre").clear().type("Hello World!");
+    get("span").should("contain.text", "Hello World!")
+});
+
+test("x-bound: innerText (initliaze from element when property is null)", html`
+    <div x-data="{ innerText: null }">
+        <pre contenteditable &innerText>Hello!</pre>
+        <span x-format>{{ innerText }}</pre>
+    </div>`, ({ get }) => {
+
+    get("span").should("contain.text", "Hello!")
+});
+
+test("x-bound: textContent", html`
+    <div x-data="{ textContent: 'Sample' }">
+        <pre contenteditable &textContent></pre>
+        <button @click="textContent='Hello!'">Click</button>
+        <span x-format>{{ textContent }}</pre>
+    </div>`, ({ get }) => {
+
+    get("span").should("contain.text", "Sample")
+    get("button").click();
+    get("span").should("contain.text", "Hello!")
+    get("pre").clear().type("Hello World!");
+    get("span").should("contain.text", "Hello World!")
+});
+
+test("x-bound: textContent (initliaze from element when property is null)", html`
+    <div x-data="{ textContent: null }">
+        <pre contenteditable &textContent>Hello!</pre>
+        <span x-format>{{ textContent }}</pre>
+    </div>`, ({ get }) => {
+
+    get("span").should("contain.text", "Hello!")
+});
