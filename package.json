@@ -28,8 +28,9 @@
   "module": "dist/alpinejs-booster.esm.js",
   "scripts": {
     "dev": "rollup -c --watch",
-    "build": "npm run clean && cross-env NODE_ENV=production rollup -c",
+    "build": "cross-env NODE_ENV=production rollup -c",
     "clean": "rimraf dist coverage",
+    "prebuild": "npm run clean",
     "cypress": "npm run build && cypress open",
     "test": "npm run build && vitest run && cypress run",
     "test:cypress": "npm run build && cypress run",
@@ -45,16 +46,16 @@
     "@rollup/plugin-replace": "^5.0.5",
     "@rollup/plugin-terser": "^0.4.4",
     "@testing-library/dom": "^9.3.4",
-    "@testing-library/jest-dom": "^6.2.0",
-    "@vitest/coverage-v8": "^1.2.0",
-    "@vitest/ui": "^1.2.0",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@vitest/coverage-v8": "^1.3.1",
+    "@vitest/ui": "^1.3.1",
     "cross-env": "^7.0.3",
-    "cypress": "^13.6.3",
-    "jsdom": "^23.2.0",
+    "cypress": "^13.6.4",
+    "jsdom": "^24.0.0",
     "rimraf": "^5.0.5",
-    "rollup": "^4.9.5",
+    "rollup": "^4.12.0",
     "rollup-plugin-bundle-size": "^1.0.3",
-    "terser": "^5.26.0",
-    "vitest": "^1.2.0"
+    "terser": "^5.27.2",
+    "vitest": "^1.3.1"
   }
 }
