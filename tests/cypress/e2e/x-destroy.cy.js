@@ -9,7 +9,7 @@ test("x-destroy", html`
         <button @click="show = false">Hide</button>
     </div>`, ({ get }) => {
 
-    get("span").should("contain.text", "Foo");
+    get("span").should("have.text", "Foo");
     get("button").click();
-    get("span").should("contain.text", "Bar");
+    get("span").should("have.text", "Bar");
 });

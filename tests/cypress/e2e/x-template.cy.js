@@ -10,5 +10,5 @@ test("x-template", html`
         <div x-template="tpl"></div>
     </div>`, ({ get }) => {
 
-    get("span").should("contain.text", "Foo");
+    get("span").should("have.text", "Foo");
 });
