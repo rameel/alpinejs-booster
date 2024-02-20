@@ -1,37 +1,36 @@
-import { registerHotkey } from "@/utilities/registerHotkey";
+import { registerHotkey } from "@ramstack/hotkey";
 import { single } from "@/utilities/utils";
+import { hasModifier } from "../utilities/utils";
 
-const optionKeys = ["stop", "passive", "prevent", "window", "document"];
+const optionKeys = ["capture", "passive", "once", "prevent", "stop", "window", "document"];
 
 export default function({ directive }) {
     directive("hotkey", (el, { expression, value, modifiers }, { evaluateLater, cleanup }) => {
         const evaluate = expression ? evaluateLater(expression) : () => {};
-        const listener = e => evaluate(() => { }, {
-            scope: {
-                $event: e
-            },
-            params: [e]
-        });
+        const listener = e => evaluate(() => { }, { scope: { $event: e }, params: [e] });
 
-        const options = {
-            stop: modifiers.includes("stop"),
-            passive: modifiers.includes("passive"),
-            prevent: modifiers.includes("prevent")
-        };
-
-        const target = modifiers.includes("window")   ? window   :
-                       modifiers.includes("document") ? document : el;
+        const target = hasModifier(modifiers, "window")   ? window   :
+                       hasModifier(modifiers, "document") ? document : el;
 
         const disposes = modifiers
             .filter(m => !optionKeys.includes(m))
             .flatMap(s => s.split(","))
-            .map(shortcut =>
-                registerHotkey(
-                    target,
-                    shortcut,
-                    listener,
-                    value || "keydown",
-                    options));
+            .map(hotkey => registerHotkey(
+                target,
+                hotkey,
+                e => {
+                    hasModifier(modifiers, "prevent") && e.preventDefault();
+                    hasModifier(modifiers, "stop") && e.stopPropogation();
+
+                    e.hotkey = hotkey;
+                    listener(e);
+                },
+                value || "keydown",
+                {
+                    capture: hasModifier(modifiers, "capture"),
+                    passive: hasModifier(modifiers, "passive"),
+                    once: hasModifier(modifiers, "once")
+                }));
 
         cleanup(single(...disposes));
     });

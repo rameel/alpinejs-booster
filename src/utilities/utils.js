@@ -67,3 +67,5 @@ export const createMap = keys => new Map(
 export const looseEqual = (a, b) => a == b;
 
 export const looseIndexOf = (array, value) => array.findIndex(v => v == value);
+
+export const hasModifier = (modifiers, modifier) => modifiers.includes(modifier);

@@ -1,6 +1,6 @@
-import { RoutePattern } from "@/plugins/router/RoutePattern";
 import { createGetter, createSetter } from "@/utilities/evaluator";
-import { registerHotkey } from "@/utilities/registerHotkey";
+import { registerHotkey } from "@ramstack/hotkey";
+import { RoutePattern } from "@/plugins/router/RoutePattern";
 import { watch } from "@/utilities/watch";
 
 export default function(alpine) {

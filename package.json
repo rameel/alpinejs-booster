@@ -41,6 +41,7 @@
     "alpinejs": "^3.12.1"
   },
   "devDependencies": {
+    "@ramstack/hotkey": "^1.0.2",
     "@rollup/plugin-alias": "^5.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
