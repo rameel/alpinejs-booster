@@ -8,8 +8,18 @@ export function warn(...args) {
     console.warn("alpinejs-booster:", ...args);
 }
 
+export const isArray = Array.isArray;
+
 export function isNullish(value) {
     return value === null || value === undefined;
+}
+
+export function isCheckableInput(el) {
+    return el.type === "checkbox" || el.type === "radio";
+}
+
+export function isNumericInput(el) {
+    return el.type === "number" || el.type === "range";
 }
 
 export function isTemplate(el) {
@@ -25,7 +35,7 @@ export function isFunction(value) {
 }
 
 export function asArray(value) {
-    return Array.isArray(value) ? value : [value];
+    return isArray(value) ? value : [value];
 }
 
 export function asyncify(fn) {
@@ -73,4 +83,19 @@ export function closest(el, callback) {
     }
 
     return el;
+}
+
+export function createMap(keys) {
+    return new Map(
+        keys.split(",").map(v => [
+            v.trim().toLowerCase(),
+            v.trim()]));
+}
+
+export function looseEqual(a, b) {
+    return a == b;
+}
+
+export function looseIndexOf(array, value) {
+    return array.findIndex(v => v == value);
 }
