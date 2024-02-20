@@ -8,6 +8,10 @@ export function test(name, template, callback) {
     });
 }
 
+export function group(name, callback) {
+    describe(name, callback);
+}
+
 function inject(template, callback) {
     cy.visit(__dirname + "/generic.html");
 
