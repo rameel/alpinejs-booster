@@ -1,11 +1,11 @@
 import { createGetter } from "@/utilities/evaluator";
-import { isNullish } from "@/utilities/utils";
+import { isNullish, hasModifier } from "@/utilities/utils";
 
 export default function({ directive, mutateDom }) {
     directive("format", (el, { modifiers }, { effect, evaluateLater }) => {
         const cache = new Map;
         const placeholderRegex = /{{(?<expr>.+?)}}/g;
-        const isOnce = modifiers.includes("once");
+        const isOnce = hasModifier(modifiers, "once");
 
         process(el);
 

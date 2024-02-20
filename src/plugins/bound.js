@@ -6,6 +6,7 @@ import {
     clone,
     closest,
     createMap,
+    hasModifier,
     isArray,
     isCheckableInput,
     isNullish,
@@ -109,8 +110,8 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
         }
 
         if (!processed) {
-            const modifier = modifiers.includes("in")  ? "in"  :
-                             modifiers.includes("out") ? "out" : "inout";
+            const modifier = hasModifier(modifiers, "in")  ? "in"  :
+                             hasModifier(modifiers, "out") ? "out" : "inout";
 
             const sourceEl = expression === value
                 ? closest(el.parentNode, node => node._x_dataStack)

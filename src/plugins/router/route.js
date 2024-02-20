@@ -1,6 +1,13 @@
 import { RoutePattern } from "@/plugins/router/RoutePattern";
 import { loadTemplate } from "@/utilities/loadTemplate";
-import { asyncify, closest, isNullish, isTemplate, warn } from "@/utilities/utils";
+import {
+    asyncify,
+    closest,
+    hasModifier,
+    isNullish,
+    isTemplate,
+    warn
+} from "@/utilities/utils";
 
 export default function({ directive, magic, $data }) {
     directive("route", (el, { expression, value, modifiers }, { cleanup, evaluate }) => {
@@ -68,7 +75,7 @@ export default function({ directive, magic, $data }) {
 
         function processView() {
             route.view = () => loadTemplate(expression);
-            modifiers.includes("prefetch") && loadTemplate(expression);
+            hasModifier(modifiers, "prefetch") && loadTemplate(expression);
 
             cleanup(() => {
                 route.view = () => new Promise(resolve => resolve(new DocumentFragment()));
