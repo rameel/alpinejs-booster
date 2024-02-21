@@ -15,6 +15,28 @@ group("x-bound: checkbox", () => {
     });
 });
 
+group("x-bound: radio", () => {
+    test("radio", html`
+        <div x-data="{ value: 2 }">
+            <label><input type="radio" &group="value" value="1" /> 1</label>
+            <label><input type="radio" &group="value" value="2" /> 2</label>
+            <label><input type="radio" &group="value" value="3" /> 3</label>
+            <button @click="value = '3'">Select 3</button>
+            <span x-format>{{ value }}</span>
+        </div>`, ({ get }) => {
+
+        get("input[value=1]").should("not.be.checked");
+        get("input[value=2]").should("be.checked");
+        get("input[value=3]").should("not.be.checked");
+
+        get("button").click();
+        get("input[value=1]").should("not.be.checked");
+        get("input[value=2]").should("not.be.checked");
+        get("input[value=3]").should("be.checked");
+        get("span").should("have.text", "3");
+    });
+});
+
 group("x-bound: input", () => {
     test("input", html`
         <div x-data="{ value: 'John' }">
