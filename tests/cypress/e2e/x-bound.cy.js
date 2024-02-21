@@ -442,3 +442,74 @@ group("x-bound: dimensions", () => {
         get("pre").contains(/^320,176$/);
     });
 });
+
+group("x-bound: component", () => {
+    test("modifier: in", html`
+        <div x-data="{ source: '1' }">
+            <span id="s1" x-format>{{ source }}</span>
+            <button id="b1" @click="source = '2'">Change source</button>
+
+            <div x-data="{ target: '0' }" &target.in="source">
+                <span id="s2" x-format>{{ target }}</span>
+                <button id="b2" @click="target = '3'">Change target</button>
+            </div>
+        </div>`, ({ get }) => {
+
+        get("#s1").should("have.text", "1");
+        get("#s2").should("have.text", "1");
+
+        get("#b1").click();
+        get("#s1").should("have.text", "2");
+        get("#s2").should("have.text", "2");
+
+        get("#b2").click();
+        get("#s1").should("have.text", "2");
+        get("#s2").should("have.text", "3");
+    });
+
+    test("modifier: out", html`
+        <div x-data="{ source: '1' }">
+            <span id="s1" x-format>{{ source }}</span>
+            <button id="b1" @click="source = '2'">Change source</button>
+
+            <div x-data="{ target: '0' }" &target.out="source">
+                <span id="s2" x-format>{{ target }}</span>
+                <button id="b2" @click="target = '3'">Change target</button>
+            </div>
+        </div>`, ({ get }) => {
+
+        get("#s1").should("have.text", "0");
+        get("#s2").should("have.text", "0");
+
+        get("#b1").click();
+        get("#s1").should("have.text", "2");
+        get("#s2").should("have.text", "0");
+
+        get("#b2").click();
+        get("#s1").should("have.text", "3");
+        get("#s2").should("have.text", "3");
+    });
+
+    test("modifier: inout", html`
+        <div x-data="{ source: '1' }">
+            <span id="s1" x-format>{{ source }}</span>
+            <button id="b1" @click="source = '2'">Change source</button>
+
+            <div x-data="{ target: '0' }" &target.inout="source">
+                <span id="s2" x-format>{{ target }}</span>
+                <button id="b2" @click="target = '3'">Change target</button>
+            </div>
+        </div>`, ({ get }) => {
+
+        get("#s1").should("have.text", "1");
+        get("#s2").should("have.text", "1");
+
+        get("#b1").click();
+        get("#s1").should("have.text", "2");
+        get("#s2").should("have.text", "2");
+
+        get("#b2").click();
+        get("#s1").should("have.text", "3");
+        get("#s2").should("have.text", "3");
+    });
+});
