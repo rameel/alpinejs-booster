@@ -15,28 +15,6 @@ group("x-bound: checkbox", () => {
     });
 });
 
-group("x-bound: radio", () => {
-    test("radio", html`
-        <div x-data="{ value: 2 }">
-            <label><input type="radio" &group="value" value="1" /> 1</label>
-            <label><input type="radio" &group="value" value="2" /> 2</label>
-            <label><input type="radio" &group="value" value="3" /> 3</label>
-            <button @click="value = '3'">Select 3</button>
-            <span x-format>{{ value }}</span>
-        </div>`, ({ get }) => {
-
-        get("input[value=1]").should("not.be.checked");
-        get("input[value=2]").should("be.checked");
-        get("input[value=3]").should("not.be.checked");
-
-        get("button").click();
-        get("input[value=1]").should("not.be.checked");
-        get("input[value=2]").should("not.be.checked");
-        get("input[value=3]").should("be.checked");
-        get("span").should("have.text", "3");
-    });
-});
-
 group("x-bound: input", () => {
     test("input", html`
         <div x-data="{ value: 'John' }">
@@ -316,5 +294,58 @@ group("x-bound: details", () => {
 
         get("details").should("have.attr", "open", "open");
         get("span").should("have.text", "true");
+    });
+});
+
+group("x-bound: group", () => {
+    test("radio", html`
+        <div x-data="{ value: 2 }">
+            <label><input type="radio" &group="value" value="1" /> 1</label>
+            <label><input type="radio" &group="value" value="2" /> 2</label>
+            <label><input type="radio" &group="value" value="3" /> 3</label>
+            <button @click="value = '3'">Select 3</button>
+            <span x-format>{{ value }}</span>
+        </div>`, ({ get }) => {
+
+        get("input[value=1]").should("not.be.checked");
+        get("input[value=2]").should("be.checked");
+        get("input[value=3]").should("not.be.checked");
+
+        get("button").click();
+        get("input[value=1]").should("not.be.checked");
+        get("input[value=2]").should("not.be.checked");
+        get("input[value=3]").should("be.checked");
+        get("span").should("have.text", "3");
+    });
+
+    test("checkbox", html`
+        <div x-data="{ value: 2 }">
+            <label><input type="checkbox" &group="value" value="1" /> 1</label>
+            <label><input type="checkbox" &group="value" value="2" /> 2</label>
+            <label><input type="checkbox" &group="value" value="3" /> 3</label>
+            <button @click="value = [1,3]">Select 1 and 3</button>
+            <span x-format>{{ JSON.stringify(value) }}</span>
+        </div>`, ({ get }) => {
+
+        get("input[value=1]").should("not.be.checked");
+        get("input[value=2]").should("be.checked");
+        get("input[value=3]").should("not.be.checked");
+
+        get("button").click();
+        get("input[value=1]").should("be.checked");
+        get("input[value=2]").should("not.be.checked");
+        get("input[value=3]").should("be.checked");
+        get("span").should("have.text", "[1,3]");
+
+        get("input[value=1]").uncheck();
+        get("input[value=2]").uncheck();
+        get("input[value=3]").uncheck();
+        get("span").should("have.text", "[]");
+
+        get("input[value=2]").check();
+        get("span").should("have.text", '["2"]');
+
+        get("input[value=1]").check();
+        get("span").should("have.text", '["2","1"]');
     });
 });
