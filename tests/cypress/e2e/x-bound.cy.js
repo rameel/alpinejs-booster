@@ -427,4 +427,18 @@ group("x-bound: dimensions", () => {
 
         get("pre").contains(/^400,398$/);
     });
+
+    test("videoWidth & videoHeight", html`
+        <div x-data="{ w: 0, h: 0 }" x-interpolate>
+            <video
+                &videoWidth="w"
+                &videoHeight="h"
+                width="350"
+                src="https://www.w3schools.com/html/mov_bbb.mp4"
+                controls></video>
+            <pre x-format>{{ w }},{{ h }}</pre>
+        </div>`, ({ get }) => {
+
+        get("pre").contains(/^320,176$/);
+    });
 });
