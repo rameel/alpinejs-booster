@@ -13,6 +13,20 @@ group("x-bound: checkbox", () => {
         get(":checkbox").should("not.be.checked");
         get("span").should("have.text", "false");
     });
+
+    test("radio", html`
+        <div x-data="{ checked: true }">
+            <input type="radio" &checked />
+            <button @click="checked = false">Uncheck</button>
+            <span x-format>{{ checked }}</span>
+        </div>`, ({ get }) => {
+
+        get("input").should("be.checked");
+        get("span").should("have.text", "true");
+        get("button").click();
+        get("input").should("not.be.checked");
+        get("span").should("have.text", "false");
+    });
 });
 
 group("x-bound: input", () => {
