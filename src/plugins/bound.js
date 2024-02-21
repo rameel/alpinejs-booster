@@ -192,7 +192,7 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
         }
 
         function processFiles() {
-            if (tagName === "INPUT" && el.type === "file") {
+            if (el.type === "file") {
                 cleanup(listen(el, "input", updateVariable));
                 return true;
             }
