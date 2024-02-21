@@ -35,6 +35,25 @@ group("x-bound: input", () => {
         get("span").should("have.text", "John Smith");
     });
 
+    test("textarea", html`
+        <div x-data="{ value: 'John' }">
+            <textarea &value></textarea>
+            <button @click="value = 'Smith'">Click</button>
+            <span x-format>{{ value }}</span>
+        </div>`, ({ get }) => {
+
+        get("textarea").should("have.value", "John");
+        get("span").should("have.text", "John");
+
+        get("button").click();
+        get("textarea").should("have.value", "Smith");
+        get("span").should("have.text", "Smith");
+
+        get("textarea").clear().type("John Smith");
+        get("textarea").should("have.value", "John Smith");
+        get("span").should("have.text", "John Smith");
+    });
+
     test("initialize from element when property is null", html`
         <div x-data="{ value: null }">
             <input &value value="John" />
