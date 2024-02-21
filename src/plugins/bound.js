@@ -1,39 +1,39 @@
 import { createGetter, createSetter } from "@/utilities/evaluator";
 import { observeResize } from "@/utilities/observeResize";
-import { asArray, clone, closest, listen, warn } from "@/utilities/utils";
 import { watch } from "@/utilities/watch";
+import {
+    asArray,
+    clone,
+    closest,
+    createMap,
+    hasModifier,
+    isArray,
+    isCheckableInput,
+    isNullish,
+    isNumericInput,
+    listen,
+    looseEqual,
+    looseIndexOf,
+    warn
+} from "@/utilities/utils";
 
-const names = new Map(
-    [
-        "value",
-        "checked",
-        "files",
-
-        "innerHTML",
-        "innerText",
-        "textContent",
-
-        "videoHeight",
-        "videoWidth",
-
-        "naturalHeight",
-        "naturalWidth",
-
-        "clientHeight",
-        "clientWidth",
-        "offsetHeight",
-        "offsetWidth",
-
-        "open",
-
-        "group"
-    ].map(v => [v.toLowerCase(), v])
-);
+const canonicalNames = createMap(
+    "value,checked,files," +
+    "innerHTML,innerText,textContent," +
+    "videoHeight,videoWidth," +
+    "naturalHeight,naturalWidth," +
+    "clientHeight,clientWidth,offsetHeight,offsetWidth," +
+    "open," +
+    "group");
 
 export default function({ directive, entangle, evaluateLater, mapAttributes, mutateDom, prefixed }) {
-    mapAttributes(({ name, value }) => ({
-        name: name.replace(/^&/, () => prefixed("bound:")),
-        value
+    // creating a shortcut for the directive,
+    // when an attribute name starting with & will refer to our directive,
+    // allowing us to write like this: &value="prop",
+    // which is equivalent to x-bound:value="prop"
+    mapAttributes(attr => ({
+        name: attr.name.replace(/^&/, () => prefixed("bound:")),
+        value: attr.value
     }));
 
     directive("bound", (el, { expression, value, modifiers }, { effect, cleanup }) => {
@@ -43,19 +43,22 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
         }
 
         expression = expression?.trim();
-        expression ||= value;
 
-        const property = names.get(
-            value.trim().replace("-", "").toLowerCase()
-            );
+        // since attributes come in a lowercase,
+        // we need to convert the bound property name to its canonical form
+        const property = canonicalNames.get(
+            value.trim().replace("-", "").toLowerCase());
 
-        expression || (expression = property);
+        // if the expression is omitted, then we assume it corresponds
+        // to the bound property name, allowing us to write expressions more concisely,
+        // and write &value instead of &value="value"
+        expression ||= property;
 
         const getValue = createGetter(evaluateLater, el, expression);
         const setValue = createSetter(evaluateLater, el, expression);
 
-        const updateProperty = () => el[property] !== getValue() && mutateDom(() => el[property] = getValue());
-        const updateVariable = () => setValue(el[property]);
+        const updateProperty = () => looseEqual(el[property], getValue()) || mutateDom(() => el[property] = getValue());
+        const updateVariable = () => setValue(isNumericInput(el) ? toNumber(el[property]) : el[property]);
 
         const tagName = el.tagName.toUpperCase();
 
@@ -77,7 +80,7 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
             case "innerHTML":
             case "innerText":
             case "textContent":
-                processed = processContentEditable();
+                processed = processContenteditable();
                 break;
 
             case "videoHeight":
@@ -94,7 +97,7 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
             case "clientWidth":
             case "offsetHeight":
             case "offsetWidth":
-                processed = processResizable();
+                processed = processDimensions();
                 break;
 
             case "open":
@@ -107,8 +110,9 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
         }
 
         if (!processed) {
-            const modifier = modifiers.includes("in")  ? "in"  :
-                             modifiers.includes("out") ? "out" : "inout";
+            const modifier =
+                hasModifier(modifiers, "in")  ? "in"  :
+                hasModifier(modifiers, "out") ? "out" : "inout";
 
             const sourceEl = expression === value
                 ? closest(el.parentNode, node => node._x_dataStack)
@@ -151,19 +155,36 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
             switch (tagName) {
                 case "INPUT":
                 case "TEXTAREA":
+                    // if the value of the bound property is "null" or "undefined",
+                    // we initialize it with the value from the element.
+                    isNullish(getValue()) && updateVariable();
+
                     effect(updateProperty);
                     cleanup(listen(el, "input", updateVariable));
                     return true;
 
                 case "SELECT":
-                    effect(() => applySelectValues(el, getValue() ?? []));
-                    cleanup(listen(el, "change", () => setValue(collectSelectedValues(el))));
+                    // WORKAROUND:
+                    // For the select element, there might be a situation
+                    // where options are generated dynamically using the x-for directive,
+                    // and in this case, attempting to set the "value" property
+                    // will have no effect since there are no options yet.
+                    // Therefore, we use a small trick to set the value a bit later
+                    // when the x-for directive has finished its work.
+                    queueMicrotask(() => {
+                        // if the value of the bound property is "null" or "undefined",
+                        // we initialize it with the value from the element.
+                        isNullish(getValue()) && updateVariable();
+
+                        effect(() => applySelectValues(el, asArray(getValue() ?? [])));
+                        cleanup(listen(el, "change", () => setValue(collectSelectedValues(el))));
+                    });
                     return true;
             }
         }
 
         function processChecked() {
-            if (isCheckable(el)) {
+            if (isCheckableInput(el)) {
                 effect(updateProperty);
                 cleanup(listen(el, "change", updateVariable));
                 return true;
@@ -171,14 +192,16 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
         }
 
         function processFiles() {
-            if (tagName === "INPUT" && el.type === "file") {
+            if (el.type === "file") {
                 cleanup(listen(el, "input", updateVariable));
                 return true;
             }
         }
 
-        function processContentEditable() {
-            if (el.hasAttribute("contenteditable")) {
+        function processContenteditable() {
+            if (el.contentEditable === "true") {
+                isNullish(getValue()) && updateVariable();
+
                 effect(updateProperty);
                 cleanup(listen(el, "input", updateVariable));
                 return true;
@@ -193,13 +216,17 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
             }
         }
 
-        function processResizable() {
+        function processDimensions() {
             cleanup(observeResize(el, updateVariable));
             return true;
         }
 
         function processDetails() {
             if (tagName === "DETAILS") {
+                // if the value of the bound property is "null" or "undefined",
+                // we initialize it with the value from the element.
+                isNullish(getValue()) && updateVariable();
+
                 effect(updateProperty);
                 cleanup(listen(el, "toggle", updateVariable));
                 return true;
@@ -207,7 +234,7 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
         }
 
         function processGroup() {
-            if (isCheckable(el)) {
+            if (isCheckableInput(el)) {
                 el.name || mutateDom(() => el.name = expression);
 
                 effect(() =>
@@ -221,36 +248,28 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
     });
 }
 
-function isCheckable(el) {
-    return el.tagName === "INPUT" && (el.type === "checkbox" || el.type === "radio");
+function toNumber(value) {
+    return value === "" ? null : +value;
 }
 
 function applySelectValues(el, values) {
     for (const option of el.options) {
-        option.selected = values.indexOf(option.value || option.text) >= 0;
+        option.selected = looseIndexOf(values, option.value) >= 0;
     }
 }
 
 function collectSelectedValues(el) {
     if (el.multiple) {
-        return [...el.selectedOptions.map(o => o.value || o.text)];
+        return [...el.selectedOptions].map(o => o.value);
     }
 
     return el.value;
 }
 
 function applyGroupValues(el, values) {
-    switch (el.type) {
-        case "checkbox":
-            el.checked = values.indexOf(el.value) >= 0;
-            break;
-
-        case "radio":
-            el.checked = Array.isArray(values)
-                ? values.indexOf(el.value) >= 0
-                : el.value === values;
-            break;
-    }
+    el.checked = isArray(values)
+        ? looseIndexOf(values, el.value) >= 0
+        : looseEqual(el.value, values);
 }
 
 function collectGroupValues(el, values) {
@@ -259,7 +278,7 @@ function collectGroupValues(el, values) {
     }
 
     values = asArray(values);
-    const index = values.indexOf(el.value);
+    const index = looseIndexOf(values, el.value);
 
     if (el.checked) {
         index >= 0 || values.push(el.value);

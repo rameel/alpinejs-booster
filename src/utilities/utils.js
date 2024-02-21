@@ -4,31 +4,25 @@ export function assert(value, message) {
     }
 }
 
-export function warn(...args) {
-    console.warn("alpinejs-booster:", ...args);
-}
+export const warn = (...args) => console.warn("alpinejs-booster:", ...args);
 
-export function isNullish(value) {
-    return value === null || value === undefined;
-}
+export const isArray = Array.isArray;
 
-export function isTemplate(el) {
-    return el instanceof HTMLTemplateElement;
-}
+export const isNullish = value => value === null || value === undefined;
 
-export function isElement(el) {
-    return el.nodeType === Node.ELEMENT_NODE;
-}
+export const isCheckableInput = el => el.type === "checkbox" || el.type === "radio";
 
-export function isFunction(value) {
-    return typeof value === "function";
-}
+export const isNumericInput = el => el.type === "number" || el.type === "range";
 
-export function asArray(value) {
-    return Array.isArray(value) ? value : [value];
-}
+export const isTemplate = el => el instanceof HTMLTemplateElement;
 
-export function asyncify(fn) {
+export const isElement = el => el.nodeType === Node.ELEMENT_NODE;
+
+export const isFunction = value => typeof value === "function";
+
+export const asArray = value => isArray(value) ? value : [value];
+
+export const asyncify = fn => {
     if (isFunction(fn) && fn.constructor?.name === "AsyncFunction") {
         return fn;
     }
@@ -43,11 +37,9 @@ export function asyncify(fn) {
     }
 }
 
-export function listen(target, type, listener, options) {
+export const listen = (target, type, listener, options) => {
     target.addEventListener(type, listener, options);
-    return () => {
-        target.removeEventListener(type, listener, options);
-    };
+    return () => target.removeEventListener(type, listener, options);
 }
 
 export const single = (...fns) => (...args) => {
@@ -56,21 +48,24 @@ export const single = (...fns) => (...args) => {
     }
 };
 
-export function clone(value) {
-    return typeof value === "object"
+export const clone = value =>
+    typeof value === "object"
         ? JSON.parse(JSON.stringify(value))
         : value
-}
 
-export function closest(el, callback) {
-    while (el) {
-        if (callback(el)) {
-            break;
-        }
-
-        el = el._x_teleportBack ?? el;
-        el = el.parentElement;
+export const closest = (el, callback) => {
+    while (el && !callback(el)) {
+        el = (el._x_teleportBack ?? el).parentElement;
     }
 
     return el;
 }
+
+export const createMap = keys => new Map(
+    keys.split(",").map(v => [v.trim().toLowerCase(), v.trim()]));
+
+export const looseEqual = (a, b) => a == b;
+
+export const looseIndexOf = (array, value) => array.findIndex(v => v == value);
+
+export const hasModifier = (modifiers, modifier) => modifiers.includes(modifier);

@@ -1,7 +1,8 @@
+import { anchorBlock } from "@/utilities/anchorBlock";
 import { createGetter } from "@/utilities/evaluator";
-import { isElement, isTemplate, warn } from "@/utilities/utils";
+import { isTemplate, warn } from "@/utilities/utils";
 
-export default function({ directive, addScopeToNode, mutateDom, initTree }) {
+export default function({ addScopeToNode, directive, initTree, mutateDom }) {
     directive("match", (el, { }, { cleanup, effect, evaluateLater }) => {
         if (!isTemplate(el)) {
             warn("x-match can only be used on a 'template' tag");
@@ -11,7 +12,7 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
         const branches = [];
         const hasDefault = () => branches.some(b => b.default);
 
-        for (let node = el.content.firstElementChild; node; node = node.nextElementSibling) {
+        for (let node of el.content.children) {
             const expr = node.getAttribute("x-case");
             if (expr !== null) {
                 if (__DEV && hasDefault()) {
@@ -32,33 +33,19 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
             }
         }
 
-        function activate(branch) {
-            if (branch.nodes) {
-                return;
-            }
-
-            clear();
-
-            branch.nodes = isTemplate(branch.el)
-                ? [...branch.el.content.cloneNode(true).childNodes]
-                : [branch.el.cloneNode(true)];
-
-            mutateDom(() => {
-                branch.nodes.forEach(node => {
-                    isElement(node) && addScopeToNode(node, {}, el);
-                    el.parentElement.insertBefore(node, el);
-                    isElement(node) && initTree(node);
+        const activate = branch => {
+            if (el._b_block?.template !== branch.el) {
+                clear();
+                anchorBlock(el, branch.el, {
+                    addScopeToNode,
+                    cleanup,
+                    initTree,
+                    mutateDom
                 });
-            });
-        }
-
-        function clear() {
-            const branch = branches.find(b => b.nodes);
-            if (branch) {
-                branch.nodes.forEach(n => n.remove());
-                branch.nodes = null;
             }
         }
+
+        const clear = () => el._b_block?.delete();
 
         effect(() => {
             let active;
@@ -69,14 +56,9 @@ export default function({ directive, addScopeToNode, mutateDom, initTree }) {
                 }
             }
 
-            if (active) {
-                activate(active);
-            }
-            else {
-                clear();
-            }
+            active
+                ? activate(active)
+                : clear();
         });
-
-        cleanup(clear);
     });
 }

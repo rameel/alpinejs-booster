@@ -1,11 +1,11 @@
 import { createGetter } from "@/utilities/evaluator";
-import { isNullish } from "@/utilities/utils";
+import { isNullish, hasModifier } from "@/utilities/utils";
 
 export default function({ directive, mutateDom }) {
     directive("format", (el, { modifiers }, { effect, evaluateLater }) => {
         const cache = new Map;
         const placeholderRegex = /{{(?<expr>.+?)}}/g;
-        const isOnce = modifiers.includes("once");
+        const isOnce = hasModifier(modifiers, "once");
 
         process(el);
 
@@ -21,18 +21,11 @@ export default function({ directive, mutateDom }) {
 
         function update(callback) {
             if (isOnce) {
-                mutateDom(() => {
-                    callback();
-                });
-
+                mutateDom(() => callback());
                 cache.clear();
             }
             else {
-                effect(() => {
-                    mutateDom(() => {
-                        callback();
-                    });
-                });
+                effect(() => mutateDom(() => callback()));
             }
         }
 
@@ -68,9 +61,8 @@ export default function({ directive, mutateDom }) {
                     }
                 }
 
-                mutateDom(() => {
-                    node.parentElement.replaceChild(fragment, node);
-                })
+                mutateDom(() =>
+                    node.parentElement.replaceChild(fragment, node));
             }
         }
 

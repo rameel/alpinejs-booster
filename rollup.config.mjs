@@ -1,9 +1,11 @@
-import path from "path";
 import alias from "@rollup/plugin-alias";
-import resolve from "@rollup/plugin-node-resolve";
+import path from "path";
 import replace from "@rollup/plugin-replace";
+import resolve from "@rollup/plugin-node-resolve";
 import size from "rollup-plugin-bundle-size";
+import stripComments from "strip-comments";
 import terser from "@rollup/plugin-terser";
+
 import {
     fileURLToPath
 } from "url";
@@ -33,6 +35,7 @@ const terserOptions = {
 
 const plugins = [
     resolve(),
+    strip(),
     production && size(),
     replace({
         "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
@@ -51,8 +54,7 @@ export default [{
     treeshake: "smallest",
     output: [{
         file: "dist/alpinejs-booster.js",
-        format: "iife",
-        sourcemap: true
+        format: "iife"
     }, production && {
         file: "dist/alpinejs-booster.min.js",
         format: "iife",
@@ -61,9 +63,25 @@ export default [{
     plugins
 }, production && {
     input: "src/plugins/index.js",
-    output: {
+    treeshake: "smallest",
+    output: [{
         file: "dist/alpinejs-booster.esm.js",
         format: "esm"
-    },
+    }, {
+        file: "dist/alpinejs-booster.esm.min.js",
+        format: "esm",
+        plugins: [terser(terserOptions)]
+    }],
     plugins
 }].filter(Boolean);
+
+function strip() {
+    return {
+        name: "strip",
+        transform(source) {
+            return {
+                code: stripComments(source)
+            };
+        }
+    };
+}

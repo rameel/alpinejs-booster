@@ -10,7 +10,6 @@ import utilities from "@/plugins/utilities";
 import when from "@/plugins/when";
 
 import { createGetter, createSetter } from "@/utilities/evaluator";
-import { registerHotkey } from "@/utilities/registerHotkey";
 import { useLocation } from "@/utilities/useLocation";
 import { watch } from "@/utilities/watch";
 
@@ -28,7 +27,6 @@ export {
 
     createGetter,
     createSetter,
-    registerHotkey,
     useLocation,
     watch
 }
