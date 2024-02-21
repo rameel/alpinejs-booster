@@ -56,6 +56,40 @@ group("x-bound: input", () => {
     });
 });
 
+group("x-bound: input numeric", () => {
+    test("number", html`
+        <div x-data="{ value: null }">
+            <input &value type="number" value="2" />
+            <button @click="value = 3">Set 3</button>
+            <span x-format>{{ value + 5 }}</span>
+        </div>`, ({ get }) => {
+
+        get("span").should("have.text", "7");
+        get("button").click();
+        get("span").should("have.text", "8");
+        get("input").clear();
+        get("span").should("have.text", "5");
+        get("input").type("15");
+        get("span").should("have.text", "20");
+    });
+
+    test("range", html`
+        <div x-data="{ value: null }">
+            <input &value type="range" value="2" min="0" max="15" />
+            <button @click="value = 3">Set 3</button>
+            <span x-format>{{ value + 5 }}</span>
+        </div>`, ({ get }) => {
+
+        get("span").should("have.text", "7");
+        get("button").click();
+        get("span").should("have.text", "8");
+        get("input").invoke("val", "0").trigger("input");
+        get("span").should("have.text", "5");
+        get("input").invoke("val", "15").trigger("input");
+        get("span").should("have.text", "20");
+    });
+});
+
 group("x-bound: select", () => {
     test("select", html`
         <div x-data="{ value: '2' }">
