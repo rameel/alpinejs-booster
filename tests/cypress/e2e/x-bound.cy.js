@@ -404,18 +404,18 @@ group("x-bound: group", () => {
 });
 
 group("x-bound: dimensions", () => {
-    test("clientWidth & clientHeight", html`
-        <div x-data="{ w: 0, h: 0, s: '10px', text: 'Text' }">
+    test("clientWidth & clientHeight, offsetWidth & offsetHeight", html`
+        <div x-data="{ cw: 0, ch: 0, ow: 0, oh: 0, size: '10px', text: 'Text' }">
             <input &value="text" />
-            <div &clientWidth="w" &clientHeight="h" style="display: inline-block">
-                <span x-format style="font-size: {{ s }}">{{ text }}</span>
+            <div &clientWidth="cw" &clientHeight="ch" &offsetWidth="ow" &offsetHeight="oh" style="display: inline-block">
+                <span x-format style="font-size: {{ size }}">{{ text }}</span>
             </div>
-            <button @click="s = '150px'">Change size</button>
-            <pre x-format>{{ w }},{{ h }}</pre>
+            <button @click="size = '150px'">Change size</button>
+            <pre x-format>{{ cw }},{{ ch }},{{ ow }},{{ oh }}</pre>
         </div>`, ({ get }) => {
 
-        get("pre").contains(/\d{2},\d{2}/);
+        get("pre").contains(/\d{2},\d{2},\d{2},\d{2}/);
         get("button").click();
-        get("pre").contains(/\d{3},\d{3}/);
+        get("pre").contains(/\d{3},\d{3},\d{3},\d{3}/);
     });
 });

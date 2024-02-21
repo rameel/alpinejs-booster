@@ -97,7 +97,7 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
             case "clientWidth":
             case "offsetHeight":
             case "offsetWidth":
-                processed = processResizable();
+                processed = processDimensions();
                 break;
 
             case "open":
@@ -216,7 +216,7 @@ export default function({ directive, entangle, evaluateLater, mapAttributes, mut
             }
         }
 
-        function processResizable() {
+        function processDimensions() {
             cleanup(observeResize(el, updateVariable));
             return true;
         }
