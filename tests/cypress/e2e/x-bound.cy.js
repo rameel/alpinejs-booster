@@ -414,8 +414,17 @@ group("x-bound: dimensions", () => {
             <pre x-format>{{ cw }},{{ ch }},{{ ow }},{{ oh }}</pre>
         </div>`, ({ get }) => {
 
-        get("pre").contains(/\d{2},\d{2},\d{2},\d{2}/);
+        get("pre").contains(/^\d{2},\d{2},\d{2},\d{2}$/);
         get("button").click();
-        get("pre").contains(/\d{3},\d{3},\d{3},\d{3}/);
+        get("pre").contains(/^\d{3},\d{3},\d{3},\d{3}$/);
+    });
+
+    test("naturalWidth & naturalHeight", html`
+        <div x-data="{ w: 0, h: 0 }" x-interpolate>
+            <img &naturalWidth="w" &naturalHeight="h" width="250" src="https://live.mdnplay.dev/en-US/docs/Web/HTML/Element/img/clock-demo-400px.png" />
+            <pre x-format>{{ w }},{{ h }}</pre>
+        </div>`, ({ get }) => {
+
+        get("pre").contains(/^400,398$/);
     });
 });
