@@ -402,3 +402,20 @@ group("x-bound: group", () => {
         get("span").should("have.text", '["2","1"]');
     });
 });
+
+group("x-bound: dimensions", () => {
+    test("clientWidth & clientHeight", html`
+        <div x-data="{ w: 0, h: 0, s: '10px', text: 'Text' }">
+            <input &value="text" />
+            <div &clientWidth="w" &clientHeight="h" style="display: inline-block">
+                <span x-format style="font-size: {{ s }}">{{ text }}</span>
+            </div>
+            <button @click="s = '150px'">Change size</button>
+            <pre x-format>{{ w }},{{ h }}</pre>
+        </div>`, ({ get }) => {
+
+        get("pre").contains(/\d{2},\d{2}/);
+        get("button").click();
+        get("pre").contains(/\d{3},\d{3}/);
+    });
+});
